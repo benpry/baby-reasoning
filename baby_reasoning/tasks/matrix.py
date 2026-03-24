@@ -139,13 +139,22 @@ class MatrixTask(Task):
 
     def generate_stimulus(self) -> Stimulus:
         all_problems = self._load()
-        rule_type = random.choice(list(all_problems.keys()))
+        # Exclude types where every problem in the test range has an empty correct answer
+        # (e.g. AND_permuted: all 100 correct answers are the empty intersection set).
+        valid_types = [
+            rt for rt, d in all_problems.items()
+            if any(
+                not _answer_is_empty(d["answer_choices"][i][int(d["correct_ind"][i])])
+                for i in range(len(d["prob"]) - _N_FEW_SHOT)
+            )
+        ]
+        rule_type = random.choice(valid_types)
         data = all_problems[rule_type]
-        n = len(data["prob"])
-        n_test = n - _N_FEW_SHOT
-        # Retry until we find a problem with a non-empty correct answer
-        for _ in range(n_test):
-            idx = random.randrange(n_test)
+        n_test = len(data["prob"]) - _N_FEW_SHOT
+        # Sample until we find a problem with a non-empty correct answer
+        indices = list(range(n_test))
+        random.shuffle(indices)
+        for idx in indices:
             correct = data["answer_choices"][idx][int(data["correct_ind"][idx])]
             if not _answer_is_empty(correct):
                 break

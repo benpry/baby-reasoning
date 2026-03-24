@@ -2,7 +2,13 @@ import pytest
 import numpy as np
 
 from baby_reasoning.tasks.base import Condition, ModelResponse, Stimulus
-from baby_reasoning.tasks.matrix import MatrixTask, _format_cell, _prob_to_query, _format_answer
+from baby_reasoning.tasks.matrix import (
+    MatrixTask,
+    _answer_is_empty,
+    _format_answer,
+    _format_cell,
+    _prob_to_query,
+)
 
 
 @pytest.fixture
@@ -26,8 +32,39 @@ def test_format_cell_filters_negative_one():
     assert _format_cell(np.array([-1, 7])) == "7"
 
 
+def test_format_cell_scalar_value():
+    assert _format_cell(6) == "6"
+
+
+def test_format_cell_scalar_negative_one():
+    assert _format_cell(-1) == ""
+
+
 def test_format_answer_multi_value():
     assert _format_answer(np.array([5, 2, 7])) == "5 2 7"
+
+
+def test_format_answer_scalar():
+    assert _format_answer(3) == "3"
+
+
+def test_answer_is_empty_empty_array():
+    assert _answer_is_empty(np.array([], dtype=int)) is True
+
+
+def test_answer_is_empty_all_sentinels():
+    assert _answer_is_empty(np.array([-1, -1])) is True
+
+
+def test_answer_is_empty_non_empty():
+    assert _answer_is_empty(np.array([3])) is False
+
+
+def test_generate_stimulus_never_returns_empty_expected(task):
+    # AND_permuted has all-empty correct answers; generate_stimulus must never pick it
+    for _ in range(20):
+        s = task.generate_stimulus()
+        assert len(s.expected) > 0, f"Got empty expected from rule_type={s.metadata['rule_type']}"
 
 
 # ---------------------------------------------------------------------------
