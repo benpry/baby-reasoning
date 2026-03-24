@@ -1,0 +1,42 @@
+[
+  {
+    "query": "ga ga | ga ga — same pattern?",
+    "expected": "yes",
+    "few_shot_examples": [
+      ["de de | de de — same pattern?", "yes"],
+      ["li li | li li — same pattern?", "yes"],
+      ["ta ta | ta ta — same pattern?", "yes"]
+    ],
+    "metadata": {"level": "same", "source": "hierarchical_equality"}
+  },
+  {
+    "query": "ga ti | ro fe — same pattern?",
+    "expected": "yes",
+    "few_shot_examples": [
+      ["de ro | li na — same pattern?", "yes"],
+      ["ba fo | bi ku — same pattern?", "yes"],
+      ["me si | pe zo — same pattern?", "yes"]
+    ],
+    "metadata": {"level": "same", "source": "hierarchical_equality"}
+  },
+  {
+    "query": "ga ga | ga ti — same pattern?",
+    "expected": "no",
+    "few_shot_examples": [
+      ["de de | de ro — same pattern?", "no"],
+      ["li li | li na — same pattern?", "no"],
+      ["ta ta | ta da — same pattern?", "no"]
+    ],
+    "metadata": {"level": "different", "source": "hierarchical_equality"}
+  },
+  {
+    "query": "ga ti | ro ro — same pattern?",
+    "expected": "no",
+    "few_shot_examples": [
+      ["de ro | li li — same pattern?", "no"],
+      ["ba fo | bi bi — same pattern?", "no"],
+      ["me si | pe pe — same pattern?", "no"]
+    ],
+    "metadata": {"level": "different", "source": "hierarchical_equality"}
+  }
+]
