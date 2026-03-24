@@ -1,4 +1,3 @@
-from dataclasses import fields
 from baby_reasoning.tasks.base import (
     Condition, Stimulus, ModelResponse, TrialScore, TrialResult, Task, ModelBackend
 )

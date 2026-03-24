@@ -2,6 +2,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any
 
 
 class Condition(str, Enum):
@@ -14,13 +15,13 @@ class Stimulus:
     query: str
     expected: str
     few_shot_examples: list[tuple[str, str]] = field(default_factory=list)
-    metadata: dict = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class ModelResponse:
     text: str
-    token_logprobs: list[float] | None
+    token_logprobs: list[float] | None = None
 
 
 @dataclass
