@@ -1,0 +1,6 @@
+#!/usr/bin/env python3
+import tyro
+from baby_reasoning.cli import Config, run
+
+if __name__ == "__main__":
+    run(tyro.cli(Config))
