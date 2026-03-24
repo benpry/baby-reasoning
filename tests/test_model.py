@@ -92,6 +92,22 @@ def test_score_completion_sums_logprobs(backend):
 
 
 @resp.activate
+def test_score_completion_returns_zero_for_zero_logprobs(backend):
+    resp.add(
+        resp.POST,
+        "http://localhost:11434/api/generate",
+        json={
+            "response": "",
+            "done": True,
+            "logprobs": {"token_logprobs": [0.0, 0.0]},
+        },
+        status=200,
+    )
+    result = backend.score_completion("prompt", "ro")
+    assert result == pytest.approx(0.0)
+
+
+@resp.activate
 def test_model_name_sent_in_request(backend):
     resp.add(
         resp.POST,

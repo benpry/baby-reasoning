@@ -51,6 +51,6 @@ class OllamaBackend(ModelBackend):
         if not isinstance(logprobs_data, dict):
             return None
         token_logprobs = logprobs_data.get("token_logprobs")
-        if not token_logprobs:
+        if token_logprobs is None:
             return None
         return sum(token_logprobs)
