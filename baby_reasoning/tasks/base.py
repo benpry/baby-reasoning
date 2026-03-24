@@ -56,6 +56,10 @@ class Task(ABC):
 
 
 class ModelBackend(ABC):
+    @property
+    @abstractmethod
+    def model(self) -> str: ...
+
     @abstractmethod
     def generate(self, prompt: str) -> ModelResponse: ...
 

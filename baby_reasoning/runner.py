@@ -38,7 +38,7 @@ def evaluate(
         score = TrialScore(correct=correct, logprob_correct=logprob_correct)
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
         results.append(TrialResult(
-            model=getattr(backend, "model", "unknown"),
+            model=backend.model,
             task=task_name,
             condition=condition,
             stimulus=stimulus,

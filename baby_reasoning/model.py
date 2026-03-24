@@ -7,8 +7,12 @@ class OllamaBackend(ModelBackend):
     """ModelBackend implementation over the Ollama HTTP API."""
 
     def __init__(self, model: str, base_url: str = "http://localhost:11434") -> None:
-        self.model = model
+        self._model = model
         self.base_url = base_url.rstrip("/")
+
+    @property
+    def model(self) -> str:
+        return self._model
 
     def _post(self, payload: dict) -> dict:
         response = requests.post(

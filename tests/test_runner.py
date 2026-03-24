@@ -15,6 +15,10 @@ class StubBackend(ModelBackend):
         self._text = text
         self._logprob = logprob
 
+    @property
+    def model(self) -> str:
+        return "stub-model"
+
     def generate(self, prompt: str) -> ModelResponse:
         return ModelResponse(text=self._text)
 
