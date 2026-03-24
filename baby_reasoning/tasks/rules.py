@@ -7,8 +7,26 @@ from baby_reasoning import DATA_DIR
 from baby_reasoning.tasks.base import Condition, ModelResponse, Stimulus, Task
 
 _SYLLABLES = [
-    "ga", "ti", "li", "na", "ta", "da", "wo", "fe", "de", "ro",
-    "ba", "fo", "bi", "ku", "me", "si", "pe", "zo", "re", "vi",
+    "ga",
+    "ti",
+    "li",
+    "na",
+    "ta",
+    "da",
+    "wo",
+    "fe",
+    "de",
+    "ro",
+    "ba",
+    "fo",
+    "bi",
+    "ku",
+    "me",
+    "si",
+    "pe",
+    "zo",
+    "re",
+    "vi",
 ]
 
 _RULES = ("ABA", "ABB", "AAB")

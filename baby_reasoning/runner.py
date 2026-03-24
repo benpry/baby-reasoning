@@ -7,7 +7,12 @@ from pathlib import Path
 
 from baby_reasoning import RESULTS_DIR
 from baby_reasoning.tasks.base import (
-    Condition, ModelBackend, Stimulus, Task, TrialResult, TrialScore,
+    Condition,
+    ModelBackend,
+    Stimulus,
+    Task,
+    TrialResult,
+    TrialScore,
 )
 
 
@@ -37,15 +42,17 @@ def evaluate(
         logprob_correct = backend.score_completion(prompt, stimulus.expected)
         score = TrialScore(correct=correct, logprob_correct=logprob_correct)
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-        results.append(TrialResult(
-            model=backend.model,
-            task=task_name,
-            condition=condition,
-            stimulus=stimulus,
-            response=response,
-            score=score,
-            timestamp=timestamp,
-        ))
+        results.append(
+            TrialResult(
+                model=backend.model,
+                task=task_name,
+                condition=condition,
+                stimulus=stimulus,
+                response=response,
+                score=score,
+                timestamp=timestamp,
+            )
+        )
 
     return results
 
@@ -61,7 +68,11 @@ def save_results(
         results_dir = RESULTS_DIR
 
     model_tag = model.replace(":", "_")
-    ts = results[0].timestamp.replace(":", "-") if results else datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%S.%fZ")
+    ts = (
+        results[0].timestamp.replace(":", "-")
+        if results
+        else datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%S.%fZ")
+    )
 
     out_dir = results_dir / model_tag / task / condition.value
     out_dir.mkdir(parents=True, exist_ok=True)

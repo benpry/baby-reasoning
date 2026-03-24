@@ -1,5 +1,10 @@
 from baby_reasoning.tasks.base import (
-    Condition, Stimulus, ModelResponse, TrialScore, TrialResult, Task, ModelBackend
+    Condition,
+    ModelBackend,
+    ModelResponse,
+    Stimulus,
+    Task,
+    TrialScore,
 )
 
 
@@ -44,9 +49,11 @@ def test_trial_score_none_logprob():
 
 def test_task_is_abstract():
     import inspect
+
     assert inspect.isabstract(Task)
 
 
 def test_model_backend_is_abstract():
     import inspect
+
     assert inspect.isabstract(ModelBackend)

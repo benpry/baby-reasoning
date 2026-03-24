@@ -25,7 +25,10 @@ def test_generate_stimulus_returns_valid_stimulus(task):
 
 
 def test_score_correct(task):
-    s = Stimulus(query="Row 1: circle | triangle | square\nRow 3: square | circle | ___", expected="triangle")
+    s = Stimulus(
+        query="Row 1: circle | triangle | square\nRow 3: square | circle | ___",
+        expected="triangle",
+    )
     response = ModelResponse(text="triangle")
     assert task.score(response, s) is True
 

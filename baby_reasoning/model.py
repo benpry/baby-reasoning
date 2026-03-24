@@ -24,13 +24,15 @@ class OllamaBackend(ModelBackend):
         return response.json()
 
     def generate(self, prompt: str) -> ModelResponse:
-        data = self._post({
-            "model": self.model,
-            "prompt": prompt,
-            "stream": False,
-            "logprobs": True,
-            "options": {"num_predict": 50},
-        })
+        data = self._post(
+            {
+                "model": self.model,
+                "prompt": prompt,
+                "stream": False,
+                "logprobs": True,
+                "options": {"num_predict": 50},
+            }
+        )
         logprobs_data = data.get("logprobs")
         token_logprobs = (
             logprobs_data.get("token_logprobs")
@@ -51,13 +53,15 @@ class OllamaBackend(ModelBackend):
         of the completion given the prompt. Use for relative comparisons between
         models on the same prompt, not as an absolute conditional probability.
         """
-        data = self._post({
-            "model": self.model,
-            "prompt": prompt + completion,
-            "stream": False,
-            "logprobs": True,
-            "options": {"num_predict": 0},
-        })
+        data = self._post(
+            {
+                "model": self.model,
+                "prompt": prompt + completion,
+                "stream": False,
+                "logprobs": True,
+                "options": {"num_predict": 0},
+            }
+        )
         logprobs_data = data.get("logprobs")
         if not isinstance(logprobs_data, dict):
             return None

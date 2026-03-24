@@ -26,7 +26,9 @@ def test_generate_stimulus_returns_valid_stimulus(task):
     assert isinstance(s, Stimulus)
     assert s.expected in ("same", "different")
     assert s.metadata.get("pattern") in (
-        "same-same", "same-different", "different-different"
+        "same-same",
+        "same-different",
+        "different-different",
     )
 
 

@@ -44,7 +44,11 @@ class MatrixTask(Task):
             query=query,
             expected=expected,
             few_shot_examples=[],
-            metadata={"rule": "rotation", "attributes": ["shape"], "source": "generated"},
+            metadata={
+                "rule": "rotation",
+                "attributes": ["shape"],
+                "source": "generated",
+            },
         )
 
     def score(self, response: ModelResponse, stimulus: Stimulus) -> bool:
