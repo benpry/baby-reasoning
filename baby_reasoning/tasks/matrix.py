@@ -6,8 +6,6 @@ from baby_reasoning import DATA_DIR
 from baby_reasoning.tasks.base import Condition, ModelResponse, Stimulus, Task
 
 _SHAPES = ["circle", "triangle", "square", "pentagon", "hexagon"]
-_SIZES = ["large", "medium", "small"]
-_COLORS = ["red", "blue", "green", "yellow", "purple"]
 
 
 def _rotation_matrix(items: list[str]) -> tuple[str, str]:
