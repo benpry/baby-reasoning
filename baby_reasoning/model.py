@@ -43,7 +43,14 @@ class OllamaBackend(ModelBackend):
         )
 
     def score_completion(self, prompt: str, completion: str) -> float | None:
-        """Return sum of token log probs for the completion, or None if unsupported."""
+        """Return sum of token log probs for the completion, or None if unsupported.
+
+        Note: Ollama's logprobs response covers the entire prompt+completion sequence,
+        not just the completion tokens. The returned value is therefore the joint
+        log probability of the full sequence, not the conditional log probability
+        of the completion given the prompt. Use for relative comparisons between
+        models on the same prompt, not as an absolute conditional probability.
+        """
         data = self._post({
             "model": self.model,
             "prompt": prompt + completion,

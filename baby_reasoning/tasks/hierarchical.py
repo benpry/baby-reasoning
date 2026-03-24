@@ -36,11 +36,26 @@ class HierarchicalTask(Task):
         ]
 
     def generate_stimulus(self) -> Stimulus:
+        pool = _LETTERS.copy()
+        random.shuffle(pool)
+        letter_idx = 0
+
+        def next_pair(same: bool) -> str:
+            nonlocal letter_idx
+            if same:
+                pair = pool[letter_idx] * 2
+                letter_idx += 1
+            else:
+                pair = pool[letter_idx] + pool[letter_idx + 1]
+                letter_idx += 2
+            return pair
+
         rel1 = random.choice([True, False])
         rel2 = random.choice([True, False])
-        pair1 = _random_pair(rel1)
-        pair2 = _random_pair(rel2)
+        pair1 = next_pair(rel1)
+        pair2 = next_pair(rel2)
         meta_rel = "same" if rel1 == rel2 else "different"
+
         if rel1 == rel2:
             pattern = "same-same" if rel1 else "different-different"
         else:
@@ -50,8 +65,8 @@ class HierarchicalTask(Task):
         for _ in range(3):
             e_rel1 = random.choice([True, False])
             e_rel2 = random.choice([True, False])
-            e_pair1 = _random_pair(e_rel1)
-            e_pair2 = _random_pair(e_rel2)
+            e_pair1 = next_pair(e_rel1)
+            e_pair2 = next_pair(e_rel2)
             e_answer = "same" if e_rel1 == e_rel2 else "different"
             examples.append((f"{e_pair1} {e_pair2}", e_answer))
 
