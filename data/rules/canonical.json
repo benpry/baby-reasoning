@@ -1,0 +1,32 @@
+[
+  {
+    "query": "de ro ___",
+    "expected": "ro",
+    "few_shot_examples": [
+      ["ga ti ___", "ti"],
+      ["li na ___", "na"],
+      ["ta da ___", "da"]
+    ],
+    "metadata": {"rule": "ABB", "source": "Marcus 1999"}
+  },
+  {
+    "query": "de ro ___",
+    "expected": "de",
+    "few_shot_examples": [
+      ["ga ti ___", "ga"],
+      ["li na ___", "li"],
+      ["ta da ___", "ta"]
+    ],
+    "metadata": {"rule": "ABA", "source": "Marcus 1999"}
+  },
+  {
+    "query": "de ___ fo",
+    "expected": "de",
+    "few_shot_examples": [
+      ["ga ___ ti", "ga"],
+      ["li ___ na", "li"],
+      ["ta ___ da", "ta"]
+    ],
+    "metadata": {"rule": "AAB", "source": "Marcus 1999"}
+  }
+]
