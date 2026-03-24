@@ -7,7 +7,7 @@
       ["li na ___", "na"],
       ["ta da ___", "da"]
     ],
-    "metadata": {"rule": "ABB", "source": "Marcus 1999"}
+    "metadata": { "rule": "ABB", "source": "Marcus 1999" }
   },
   {
     "query": "de ro ___",
@@ -17,7 +17,7 @@
       ["li na ___", "li"],
       ["ta da ___", "ta"]
     ],
-    "metadata": {"rule": "ABA", "source": "Marcus 1999"}
+    "metadata": { "rule": "ABA", "source": "Marcus 1999" }
   },
   {
     "query": "de ___ fo",
@@ -27,6 +27,6 @@
       ["li ___ na", "li"],
       ["ta ___ da", "ta"]
     ],
-    "metadata": {"rule": "AAB", "source": "Marcus 1999"}
+    "metadata": { "rule": "AAB", "source": "Marcus 1999" }
   }
 ]

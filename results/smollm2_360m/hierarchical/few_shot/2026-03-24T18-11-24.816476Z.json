@@ -1,0 +1,110 @@
+[
+  {
+    "model": "smollm2:360m",
+    "task": "hierarchical",
+    "condition": "few_shot",
+    "stimulus": {
+      "query": "AA BB",
+      "expected": "same",
+      "few_shot_examples": [
+        ["CC DD", "same"],
+        ["EE FF", "same"],
+        ["GH IJ", "different"]
+      ],
+      "metadata": {
+        "pattern": "same-same",
+        "source": "Marcus 2001"
+      }
+    },
+    "response": {
+      "text": "same",
+      "token_logprobs": null
+    },
+    "score": {
+      "correct": true,
+      "logprob_correct": null
+    },
+    "timestamp": "2026-03-24T18:11:24.816476Z"
+  },
+  {
+    "model": "smollm2:360m",
+    "task": "hierarchical",
+    "condition": "few_shot",
+    "stimulus": {
+      "query": "AA AB",
+      "expected": "different",
+      "few_shot_examples": [
+        ["CC DD", "same"],
+        ["EE FF", "same"],
+        ["GH IJ", "different"]
+      ],
+      "metadata": {
+        "pattern": "same-different",
+        "source": "Marcus 2001"
+      }
+    },
+    "response": {
+      "text": "same",
+      "token_logprobs": null
+    },
+    "score": {
+      "correct": false,
+      "logprob_correct": null
+    },
+    "timestamp": "2026-03-24T18:11:24.964021Z"
+  },
+  {
+    "model": "smollm2:360m",
+    "task": "hierarchical",
+    "condition": "few_shot",
+    "stimulus": {
+      "query": "CD EF",
+      "expected": "same",
+      "few_shot_examples": [
+        ["CC DD", "same"],
+        ["EE FF", "same"],
+        ["GH IJ", "different"]
+      ],
+      "metadata": {
+        "pattern": "different-different",
+        "source": "Marcus 2001"
+      }
+    },
+    "response": {
+      "text": "same",
+      "token_logprobs": null
+    },
+    "score": {
+      "correct": true,
+      "logprob_correct": null
+    },
+    "timestamp": "2026-03-24T18:11:25.093855Z"
+  },
+  {
+    "model": "smollm2:360m",
+    "task": "hierarchical",
+    "condition": "few_shot",
+    "stimulus": {
+      "query": "CC CD",
+      "expected": "different",
+      "few_shot_examples": [
+        ["CC DD", "same"],
+        ["EE FF", "same"],
+        ["GH IJ", "different"]
+      ],
+      "metadata": {
+        "pattern": "same-different",
+        "source": "Marcus 2001"
+      }
+    },
+    "response": {
+      "text": "same",
+      "token_logprobs": null
+    },
+    "score": {
+      "correct": false,
+      "logprob_correct": null
+    },
+    "timestamp": "2026-03-24T18:11:25.226902Z"
+  }
+]

@@ -7,7 +7,10 @@
       ["EE FF", "same"],
       ["GH IJ", "different"]
     ],
-    "metadata": {"pattern": "same-same", "source": "Marcus 2001"}
+    "metadata": {
+      "pattern": "same-same",
+      "source": "Marcus 2001"
+    }
   },
   {
     "query": "AA AB",
@@ -17,7 +20,10 @@
       ["EE FF", "same"],
       ["GH IJ", "different"]
     ],
-    "metadata": {"pattern": "same-different", "source": "Marcus 2001"}
+    "metadata": {
+      "pattern": "same-different",
+      "source": "Marcus 2001"
+    }
   },
   {
     "query": "CD EF",
@@ -27,7 +33,10 @@
       ["EE FF", "same"],
       ["GH IJ", "different"]
     ],
-    "metadata": {"pattern": "different-different", "source": "Marcus 2001"}
+    "metadata": {
+      "pattern": "different-different",
+      "source": "Marcus 2001"
+    }
   },
   {
     "query": "CC CD",
@@ -37,6 +46,9 @@
       ["EE FF", "same"],
       ["GH IJ", "different"]
     ],
-    "metadata": {"pattern": "same-different", "source": "Marcus 2001"}
+    "metadata": {
+      "pattern": "same-different",
+      "source": "Marcus 2001"
+    }
   }
 ]

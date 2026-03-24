@@ -12,32 +12,33 @@
 
 ## File Map
 
-| File | Responsibility |
-|---|---|
-| `pyproject.toml` | Package metadata, dependencies, pytest config |
-| `baby_reasoning/__init__.py` | `DATA_DIR`, `RESULTS_DIR` path constants |
-| `baby_reasoning/tasks/base.py` | `Condition`, `Stimulus`, `ModelResponse`, `TrialScore`, `TrialResult`, `Task` ABC, `ModelBackend` ABC |
-| `baby_reasoning/tasks/rules.py` | Marcus rule learning task |
-| `baby_reasoning/tasks/hierarchical.py` | Hierarchical equality task |
-| `baby_reasoning/tasks/matrix.py` | Text-based matrix reasoning task |
-| `baby_reasoning/model.py` | `OllamaBackend` |
-| `baby_reasoning/runner.py` | `evaluate()`, `save_results()` |
-| `data/rules/canonical.json` | Canonical stimulus set for rules task |
-| `data/hierarchical/canonical.json` | Canonical stimulus set for hierarchical equality |
-| `data/matrix/canonical.json` | Canonical stimulus set for matrix reasoning |
-| `tests/test_base.py` | Dataclass and ABC unit tests |
-| `tests/test_rules.py` | Rules task unit tests |
-| `tests/test_hierarchical.py` | Hierarchical equality unit tests |
-| `tests/test_matrix.py` | Matrix reasoning unit tests |
-| `tests/test_model.py` | OllamaBackend with mock HTTP |
-| `tests/test_runner.py` | Runner unit tests with stub backend |
-| `notebooks/analysis.ipynb` | Analysis notebook |
+| File                                   | Responsibility                                                                                        |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `pyproject.toml`                       | Package metadata, dependencies, pytest config                                                         |
+| `baby_reasoning/__init__.py`           | `DATA_DIR`, `RESULTS_DIR` path constants                                                              |
+| `baby_reasoning/tasks/base.py`         | `Condition`, `Stimulus`, `ModelResponse`, `TrialScore`, `TrialResult`, `Task` ABC, `ModelBackend` ABC |
+| `baby_reasoning/tasks/rules.py`        | Marcus rule learning task                                                                             |
+| `baby_reasoning/tasks/hierarchical.py` | Hierarchical equality task                                                                            |
+| `baby_reasoning/tasks/matrix.py`       | Text-based matrix reasoning task                                                                      |
+| `baby_reasoning/model.py`              | `OllamaBackend`                                                                                       |
+| `baby_reasoning/runner.py`             | `evaluate()`, `save_results()`                                                                        |
+| `data/rules/canonical.json`            | Canonical stimulus set for rules task                                                                 |
+| `data/hierarchical/canonical.json`     | Canonical stimulus set for hierarchical equality                                                      |
+| `data/matrix/canonical.json`           | Canonical stimulus set for matrix reasoning                                                           |
+| `tests/test_base.py`                   | Dataclass and ABC unit tests                                                                          |
+| `tests/test_rules.py`                  | Rules task unit tests                                                                                 |
+| `tests/test_hierarchical.py`           | Hierarchical equality unit tests                                                                      |
+| `tests/test_matrix.py`                 | Matrix reasoning unit tests                                                                           |
+| `tests/test_model.py`                  | OllamaBackend with mock HTTP                                                                          |
+| `tests/test_runner.py`                 | Runner unit tests with stub backend                                                                   |
+| `notebooks/analysis.ipynb`             | Analysis notebook                                                                                     |
 
 ---
 
 ## Task 1: Project Scaffolding
 
 **Files:**
+
 - Create: `pyproject.toml`
 - Create: `baby_reasoning/__init__.py`
 - Create: `baby_reasoning/tasks/__init__.py`
@@ -130,6 +131,7 @@ git commit -m "feat: project scaffolding — package structure and dependencies"
 ## Task 2: Core Abstractions
 
 **Files:**
+
 - Create: `baby_reasoning/tasks/base.py`
 - Create: `tests/test_base.py`
 
@@ -288,17 +290,21 @@ git commit -m "feat: core abstractions — Condition, Stimulus, ModelResponse, T
 ## Task 3: Rules Task
 
 **Files:**
+
 - Create: `data/rules/canonical.json`
 - Create: `baby_reasoning/tasks/rules.py`
 - Create: `tests/test_rules.py`
 
 ### Background
+
 The Marcus (1999) rule-learning task uses nonsense syllable triplets following one of three abstract rules:
+
 - **ABA**: first and third elements are identical (e.g. "ga ti ga")
 - **ABB**: second and third elements are identical (e.g. "ga ti ti")
 - **AAB**: first and second elements are identical (e.g. "ga ga ti")
 
 For exact-match scoring, queries use fill-in-the-blank format:
+
 - ABA: `"de ro ___"` → expected `"de"` (repeat A)
 - ABB: `"de ro ___"` → expected `"ro"` (repeat B)
 - AAB: `"de ___ fo"` → expected `"de"` (repeat A)
@@ -317,7 +323,7 @@ For exact-match scoring, queries use fill-in-the-blank format:
       ["li na ___", "na"],
       ["ta da ___", "da"]
     ],
-    "metadata": {"rule": "ABB", "source": "Marcus 1999"}
+    "metadata": { "rule": "ABB", "source": "Marcus 1999" }
   },
   {
     "query": "de ro ___",
@@ -327,7 +333,7 @@ For exact-match scoring, queries use fill-in-the-blank format:
       ["li na ___", "li"],
       ["ta da ___", "ta"]
     ],
-    "metadata": {"rule": "ABA", "source": "Marcus 1999"}
+    "metadata": { "rule": "ABA", "source": "Marcus 1999" }
   },
   {
     "query": "de ___ fo",
@@ -337,7 +343,7 @@ For exact-match scoring, queries use fill-in-the-blank format:
       ["li ___ na", "li"],
       ["ta ___ da", "ta"]
     ],
-    "metadata": {"rule": "AAB", "source": "Marcus 1999"}
+    "metadata": { "rule": "AAB", "source": "Marcus 1999" }
   }
 ]
 ```
@@ -540,16 +546,20 @@ git commit -m "feat: rules task — Marcus ABA/ABB/AAB rule learning with canoni
 ## Task 4: Hierarchical Equality Task
 
 **Files:**
+
 - Create: `data/hierarchical/canonical.json`
 - Create: `baby_reasoning/tasks/hierarchical.py`
 - Create: `tests/test_hierarchical.py`
 
 ### Background
+
 The hierarchical equality task (Marcus ~2001; see Geiger 2022) tests whether a model can recognize abstract relational structure at two levels:
+
 - **Level 1**: whether two items in a pair are the same or different (e.g. "AA" → same, "AB" → different)
 - **Level 2 (the task)**: whether two pairs share the same Level-1 relationship
 
 Example stimuli:
+
 - "AA BB" → both pairs are (same, same) → meta-relation: `"same"`
 - "AA AB" → pairs are (same, different) → meta-relation: `"different"`
 - "CD EF" → both pairs are (different, different) → meta-relation: `"same"`
@@ -568,7 +578,7 @@ Example stimuli:
       ["EE FF", "same"],
       ["GH IJ", "different"]
     ],
-    "metadata": {"pattern": "same-same", "source": "Marcus 2001"}
+    "metadata": { "pattern": "same-same", "source": "Marcus 2001" }
   },
   {
     "query": "AA AB",
@@ -578,7 +588,7 @@ Example stimuli:
       ["EE FF", "same"],
       ["GH IJ", "different"]
     ],
-    "metadata": {"pattern": "same-different", "source": "Marcus 2001"}
+    "metadata": { "pattern": "same-different", "source": "Marcus 2001" }
   },
   {
     "query": "CD EF",
@@ -588,7 +598,7 @@ Example stimuli:
       ["EE FF", "same"],
       ["GH IJ", "different"]
     ],
-    "metadata": {"pattern": "different-different", "source": "Marcus 2001"}
+    "metadata": { "pattern": "different-different", "source": "Marcus 2001" }
   },
   {
     "query": "CC CD",
@@ -598,7 +608,7 @@ Example stimuli:
       ["EE FF", "same"],
       ["GH IJ", "different"]
     ],
-    "metadata": {"pattern": "same-different", "source": "Marcus 2001"}
+    "metadata": { "pattern": "same-different", "source": "Marcus 2001" }
   }
 ]
 ```
@@ -800,19 +810,23 @@ git commit -m "feat: hierarchical equality task with canonical stimuli and gener
 ## Task 5: Matrix Reasoning Task
 
 **Files:**
+
 - Create: `data/matrix/canonical.json`
 - Create: `baby_reasoning/tasks/matrix.py`
 - Create: `tests/test_matrix.py`
 
 ### Background
+
 Text-encoded Raven's Progressive Matrices (Webb et al. 2023). A 3×3 grid where items vary along one or more attributes (shape, size, color, etc.) following row- and column-wise rules. The bottom-right cell is missing; the model must generate it.
 
 Example (single attribute, cycling rule):
+
 ```
 Row 1: circle | triangle | square
 Row 2: triangle | square | circle
 Row 3: square | circle | ___
 ```
+
 Expected: `"triangle"`
 
 **Note:** Expand canonical stimuli from Webb et al. (2023) before running experiments. The items below are structurally valid examples.
@@ -1030,10 +1044,12 @@ git commit -m "feat: matrix reasoning task with canonical stimuli and rotation g
 ## Task 6: Ollama Model Backend
 
 **Files:**
+
 - Create: `baby_reasoning/model.py`
 - Create: `tests/test_model.py`
 
 ### Ollama API Notes
+
 - Generate endpoint: `POST http://localhost:11434/api/generate`
 - Request body: `{"model": "llama3:8b", "prompt": "...", "stream": false, "options": {"num_predict": 50}}`
 - Response: `{"response": "...", "done": true, ...}`
@@ -1242,6 +1258,7 @@ git commit -m "feat: OllamaBackend with generate() and score_completion() over O
 ## Task 7: Runner and Result Serialization
 
 **Files:**
+
 - Create: `baby_reasoning/runner.py`
 - Create: `tests/test_runner.py`
 
@@ -1470,6 +1487,7 @@ git commit -m "feat: evaluate() runner and save_results() serialization"
 ## Task 8: Analysis Notebook
 
 **Files:**
+
 - Create: `notebooks/analysis.ipynb`
 
 - [ ] **Step 1: Create the analysis notebook**
@@ -1483,6 +1501,7 @@ git commit -m "feat: evaluate() runner and save_results() serialization"
 Create `notebooks/analysis.ipynb` as a Jupyter notebook with these cells:
 
 **Cell 1 — Imports:**
+
 ```python
 import json
 from pathlib import Path
@@ -1494,6 +1513,7 @@ RESULTS_DIR = Path("../results")
 ```
 
 **Cell 2 — Load all results:**
+
 ```python
 records = []
 for json_file in RESULTS_DIR.rglob("*.json"):
@@ -1520,6 +1540,7 @@ df.head()
 ```
 
 **Cell 3 — Accuracy table (model × task × condition):**
+
 ```python
 accuracy = (
     df.groupby(["model", "task", "condition"])["correct"]
@@ -1534,6 +1555,7 @@ print(accuracy.to_string(index=False))
 ```
 
 **Cell 4 — Accuracy heatmap:**
+
 ```python
 pivot = df.groupby(["model", "task"])["correct"].mean().unstack("task")
 plt.figure(figsize=(8, max(3, len(pivot) * 0.6)))
@@ -1544,6 +1566,7 @@ plt.show()
 ```
 
 **Cell 5 — Log probability distributions:**
+
 ```python
 lp_df = df.dropna(subset=["logprob_correct"])
 if lp_df.empty:
@@ -1558,6 +1581,7 @@ else:
 ```
 
 **Cell 6 — Per-task breakdown by rule/pattern type:**
+
 ```python
 df["rule"] = df["metadata"].apply(lambda m: m.get("rule") or m.get("pattern", "unknown"))
 rule_acc = (

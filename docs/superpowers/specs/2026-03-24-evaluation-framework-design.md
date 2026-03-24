@@ -1,4 +1,5 @@
 # Evaluation Framework Design
+
 _Date: 2026-03-24_
 
 ## Overview
@@ -11,11 +12,11 @@ A Python research tool for evaluating small language models (served locally via 
 
 Three task types are in scope:
 
-| Module | Task | Source |
-|---|---|---|
-| `tasks/rules.py` | Marcus rule learning (ABA, ABB, AAB patterns over syllables) | Marcus (1999) |
-| `tasks/hierarchical.py` | Hierarchical equality task | Marcus (~2001); see Geiger (2022) |
-| `tasks/matrix.py` | Text-based Raven's Progressive Matrices | Webb et al. (2023) |
+| Module                  | Task                                                         | Source                            |
+| ----------------------- | ------------------------------------------------------------ | --------------------------------- |
+| `tasks/rules.py`        | Marcus rule learning (ABA, ABB, AAB patterns over syllables) | Marcus (1999)                     |
+| `tasks/hierarchical.py` | Hierarchical equality task                                   | Marcus (~2001); see Geiger (2022) |
+| `tasks/matrix.py`       | Text-based Raven's Progressive Matrices                      | Webb et al. (2023)                |
 
 Analogical reasoning tasks are explicitly out of scope for now.
 
@@ -31,6 +32,7 @@ Every task is evaluated in two conditions:
 The number of few-shot examples is configurable per task (e.g. Marcus traditionally uses 3–6 exemplars). Condition is a parameter passed to the `evaluate()` function.
 
 `Condition` is defined as a `str` enum:
+
 ```python
 class Condition(str, Enum):
     ZERO_SHOT = "zero_shot"
@@ -72,6 +74,7 @@ class Task(ABC):
 
 **`ModelBackend` (ABC)**
 Thin adapter over Ollama (or any future backend):
+
 ```python
 class ModelBackend(ABC):
     @abstractmethod
@@ -85,6 +88,7 @@ class ModelBackend(ABC):
 ### Data Classes (`tasks/base.py`)
 
 **`ModelResponse`**
+
 ```python
 @dataclass
 class ModelResponse:
@@ -94,6 +98,7 @@ class ModelResponse:
 
 **`TrialScore`**
 Assembled by the runner from `task.score()` (for `correct`) and `backend.score_completion()` (for `logprob_correct`):
+
 ```python
 @dataclass
 class TrialScore:
@@ -103,6 +108,7 @@ class TrialScore:
 
 **`TrialResult`**
 One row of output, serialized to JSON:
+
 ```python
 @dataclass
 class TrialResult:
@@ -129,6 +135,7 @@ def evaluate(
 ```
 
 For each stimulus, the runner:
+
 1. Calls `task.build_prompt(stimulus, condition)` to get the full prompt string
 2. Calls `backend.generate(prompt)` to get `ModelResponse`
 3. Calls `task.score(response, stimulus)` to get `correct: bool`
@@ -141,6 +148,7 @@ Results are returned to the caller for serialization.
 ### Model Backend (`model.py`)
 
 `OllamaBackend` implements `ModelBackend`:
+
 - `generate()` calls Ollama's `/api/generate` with `logprobs: true` where supported
 - `score_completion()` sends the prompt + completion to Ollama and sums the token log probs of the completion tokens; returns `None` if the model or Ollama version does not support log probs
 - Log prob `None` propagates gracefully through `TrialScore` and into stored results
@@ -214,15 +222,18 @@ Each `canonical.json` is a JSON array of objects. All fields map directly to `St
 `canonical_stimuli()` loads the JSON file relative to the task module's location using `importlib.resources` or a path resolved from `__file__`, so it works regardless of the working directory.
 
 ### Rules (Marcus)
+
 - Syllable sequences following ABA, ABB, or AAB patterns (e.g. `ga ti ti`)
 - Few-shot examples are drawn from the same rule type as the query
 - Scoring: lowercase + strip whitespace, check response contains expected sequence
 
 ### Hierarchical Equality
+
 - Structured relational prompts testing whether the model recognizes hierarchical equality (e.g. same/different at nested levels)
 - Scoring: match against expected relational label
 
 ### Matrix Reasoning (Webb)
+
 - Text-encoded analogical matrices; model must complete the missing cell
 - Prompt format follows Webb et al. (2023) text serialization
 - Scoring: match against expected completion token(s)
@@ -262,6 +273,7 @@ The notebook flattens the nested structure on load, promoting these fields to to
 `model`, `task`, `condition`, `query`, `expected`, `few_shot_examples`, `metadata`, `response_text`, `token_logprobs`, `correct`, `logprob_correct`, `timestamp`
 
 The notebook produces:
+
 - Accuracy tables (model × task × condition)
 - Log probability distributions per condition
 - Per-task breakdown by rule/pattern type (from `stimulus.metadata`)

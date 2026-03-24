@@ -1,0 +1,83 @@
+[
+  {
+    "model": "smollm2:360m",
+    "task": "rules",
+    "condition": "zero_shot",
+    "stimulus": {
+      "query": "de ro ___",
+      "expected": "ro",
+      "few_shot_examples": [
+        ["ga ti ___", "ti"],
+        ["li na ___", "na"],
+        ["ta da ___", "da"]
+      ],
+      "metadata": {
+        "rule": "ABB",
+        "source": "Marcus 1999"
+      }
+    },
+    "response": {
+      "text": "the next day",
+      "token_logprobs": null
+    },
+    "score": {
+      "correct": false,
+      "logprob_correct": null
+    },
+    "timestamp": "2026-03-24T18:11:23.275019Z"
+  },
+  {
+    "model": "smollm2:360m",
+    "task": "rules",
+    "condition": "zero_shot",
+    "stimulus": {
+      "query": "de ro ___",
+      "expected": "de",
+      "few_shot_examples": [
+        ["ga ti ___", "ga"],
+        ["li na ___", "li"],
+        ["ta da ___", "ta"]
+      ],
+      "metadata": {
+        "rule": "ABA",
+        "source": "Marcus 1999"
+      }
+    },
+    "response": {
+      "text": "de ro-e",
+      "token_logprobs": null
+    },
+    "score": {
+      "correct": false,
+      "logprob_correct": null
+    },
+    "timestamp": "2026-03-24T18:11:23.466634Z"
+  },
+  {
+    "model": "smollm2:360m",
+    "task": "rules",
+    "condition": "zero_shot",
+    "stimulus": {
+      "query": "de ___ fo",
+      "expected": "de",
+      "few_shot_examples": [
+        ["ga ___ ti", "ga"],
+        ["li ___ na", "li"],
+        ["ta ___ da", "ta"]
+      ],
+      "metadata": {
+        "rule": "AAB",
+        "source": "Marcus 1999"
+      }
+    },
+    "response": {
+      "text": "de Farewell",
+      "token_logprobs": null
+    },
+    "score": {
+      "correct": false,
+      "logprob_correct": null
+    },
+    "timestamp": "2026-03-24T18:11:23.653760Z"
+  }
+]
