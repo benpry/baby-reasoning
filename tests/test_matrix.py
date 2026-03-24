@@ -48,6 +48,22 @@ def test_format_answer_scalar():
     assert _format_answer(3) == "3"
 
 
+def test_format_answer_filters_all_negatives():
+    assert _format_answer(np.array([-1, -1])) == ""
+
+
+def test_prob_to_query_formats_3x3_grid():
+    # 3×3 array where each cell is a single integer
+    prob = np.array([[[1], [2], [3]], [[4], [5], [6]], [[7], [8], [9]]])
+    result = _prob_to_query(prob)
+    rows = result.split("\n")
+    assert len(rows) == 3
+    assert rows[0] == "[1] [2] [3]"
+    assert rows[1] == "[4] [5] [6]"
+    # Bottom-right cell is open bracket only
+    assert rows[2] == "[7] [8] ["
+
+
 def test_answer_is_empty_empty_array():
     assert _answer_is_empty(np.array([], dtype=int)) is True
 
@@ -77,6 +93,9 @@ def test_canonical_stimuli_covers_all_rule_types(task):
     # AND_permuted has all-empty correct answers (empty-set intersections) and is
     # excluded from the canonical set since free generation cannot score empty responses.
     assert len(rule_types) == 31
+    # Each type contributes up to _N_CANONICAL_PER_TYPE stimuli; expect at least 4 per type
+    # (some types may have fewer non-empty problems, but not fewer than 4).
+    assert len(stimuli) >= 31 * 4
 
 
 def test_canonical_stimuli_have_valid_integer_expected(task):
@@ -133,9 +152,16 @@ def test_score_strips_brackets(task):
     assert task.score(ModelResponse(text="3]"), s) is True
 
 
-def test_score_strips_leading_bracket(task):
+def test_score_strips_trailing_bracket_multi_token(task):
     s = Stimulus(query="", expected="5 2 7", metadata={})
     assert task.score(ModelResponse(text="5 2 7]"), s) is True
+
+
+def test_score_does_not_match_response_with_leading_bracket(task):
+    # Model should output "3]" (completing the open "["), not "[3]".
+    # A leading "[" is not stripped; it causes a mismatch.
+    s = Stimulus(query="", expected="3", metadata={})
+    assert task.score(ModelResponse(text="[3]"), s) is False
 
 
 def test_score_incorrect(task):
