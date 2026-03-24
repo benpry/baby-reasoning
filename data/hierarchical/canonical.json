@@ -4,51 +4,52 @@
     "expected": "same",
     "few_shot_examples": [
       ["CC DD", "same"],
-      ["EE FF", "same"],
-      ["GH IJ", "different"]
+      ["EF GH", "same"],
+      ["IJ KK", "different"]
     ],
     "metadata": {
       "pattern": "same-same",
-      "source": "Marcus 2001"
+      "source": "Marcus 2001 / Geiger 2022"
     }
   },
   {
-    "query": "AA AB",
+    "query": "LL MN",
     "expected": "different",
     "few_shot_examples": [
-      ["CC DD", "same"],
-      ["EE FF", "same"],
-      ["GH IJ", "different"]
+      ["OO PP", "same"],
+      ["QR ST", "same"],
+      ["UU VW", "different"]
     ],
     "metadata": {
       "pattern": "same-different",
-      "source": "Marcus 2001"
+      "source": "Marcus 2001 / Geiger 2022"
     }
   },
   {
-    "query": "CD EF",
+    "query": "XY ZA",
     "expected": "same",
     "few_shot_examples": [
-      ["CC DD", "same"],
-      ["EE FF", "same"],
-      ["GH IJ", "different"]
+      ["BB CC", "same"],
+      ["DE FG", "same"],
+      ["HI JJ", "different"]
     ],
     "metadata": {
       "pattern": "different-different",
-      "source": "Marcus 2001"
+      "source": "Marcus 2001 / Geiger 2022"
     }
   },
   {
-    "query": "CC CD",
+    "query": "KL MM",
     "expected": "different",
     "few_shot_examples": [
-      ["CC DD", "same"],
-      ["EE FF", "same"],
-      ["GH IJ", "different"]
+      ["NN OP", "different"],
+      ["QR SS", "different"],
+      ["TT UV", "different"]
     ],
     "metadata": {
       "pattern": "same-different",
-      "source": "Marcus 2001"
+      "source": "Marcus 2001 / Geiger 2022",
+      "note": "different-same ordering: pair1 is different, pair2 is same"
     }
   }
 ]

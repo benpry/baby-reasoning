@@ -1,6 +1,8 @@
 import pytest
+import numpy as np
+
 from baby_reasoning.tasks.base import Condition, ModelResponse, Stimulus
-from baby_reasoning.tasks.matrix import MatrixTask
+from baby_reasoning.tasks.matrix import MatrixTask, _format_cell, _prob_to_query, _format_answer
 
 
 @pytest.fixture
@@ -8,73 +10,136 @@ def task():
     return MatrixTask()
 
 
-def test_canonical_stimuli_loads(task):
-    stimuli = task.canonical_stimuli()
-    assert len(stimuli) >= 3
-    for s in stimuli:
-        assert s.expected
-        assert "___" in s.query
+# ---------------------------------------------------------------------------
+# Helper functions
+# ---------------------------------------------------------------------------
 
+def test_format_cell_single_value():
+    assert _format_cell(np.array([6])) == "6"
+
+
+def test_format_cell_multi_value():
+    assert _format_cell(np.array([0, 6])) == "0 6"
+
+
+def test_format_cell_filters_negative_one():
+    assert _format_cell(np.array([-1, 7])) == "7"
+
+
+def test_format_answer_multi_value():
+    assert _format_answer(np.array([5, 2, 7])) == "5 2 7"
+
+
+# ---------------------------------------------------------------------------
+# canonical_stimuli — loads from npz
+# ---------------------------------------------------------------------------
+
+def test_canonical_stimuli_covers_all_rule_types(task):
+    stimuli = task.canonical_stimuli()
+    rule_types = {s.metadata["rule_type"] for s in stimuli}
+    # AND_permuted has all-empty correct answers (empty-set intersections) and is
+    # excluded from the canonical set since free generation cannot score empty responses.
+    assert len(rule_types) == 31
+
+
+def test_canonical_stimuli_have_valid_integer_expected(task):
+    stimuli = task.canonical_stimuli()
+    for s in stimuli:
+        assert len(s.expected) > 0
+        for token in s.expected.split():
+            int(token)  # must parse as integer
+
+
+def test_canonical_stimuli_queries_end_with_open_bracket(task):
+    stimuli = task.canonical_stimuli()
+    for s in stimuli:
+        assert s.query.endswith("["), f"Query does not end with '[': {s.query!r}"
+
+
+def test_canonical_stimuli_have_few_shot_examples(task):
+    stimuli = task.canonical_stimuli()
+    for s in stimuli:
+        assert len(s.few_shot_examples) == 3
+
+
+# ---------------------------------------------------------------------------
+# generate_stimulus
+# ---------------------------------------------------------------------------
 
 def test_generate_stimulus_returns_valid_stimulus(task):
     s = task.generate_stimulus()
     assert isinstance(s, Stimulus)
-    assert "___" in s.query
-    assert s.expected
-    assert s.metadata.get("rule")
+    assert s.query.endswith("[")
+    assert len(s.expected) > 0
+    assert "rule_type" in s.metadata
 
 
-def test_score_correct(task):
-    s = Stimulus(
-        query="Row 1: circle | triangle | square\nRow 3: square | circle | ___",
-        expected="triangle",
-    )
-    response = ModelResponse(text="triangle")
-    assert task.score(response, s) is True
+def test_generate_stimulus_has_three_few_shot_examples(task):
+    s = task.generate_stimulus()
+    assert len(s.few_shot_examples) == 3
+    for ex_query, ex_answer in s.few_shot_examples:
+        assert ex_query.endswith("[")
+        assert len(ex_answer) > 0
 
 
-def test_score_correct_case_insensitive(task):
-    s = Stimulus(query="...", expected="small square")
-    response = ModelResponse(text="Small Square")
-    assert task.score(response, s) is True
+# ---------------------------------------------------------------------------
+# score
+# ---------------------------------------------------------------------------
+
+def test_score_exact_match(task):
+    s = Stimulus(query="", expected="3", metadata={})
+    assert task.score(ModelResponse(text="3"), s) is True
+
+
+def test_score_strips_brackets(task):
+    s = Stimulus(query="", expected="3", metadata={})
+    assert task.score(ModelResponse(text="3]"), s) is True
+
+
+def test_score_strips_leading_bracket(task):
+    s = Stimulus(query="", expected="5 2 7", metadata={})
+    assert task.score(ModelResponse(text="5 2 7]"), s) is True
 
 
 def test_score_incorrect(task):
-    s = Stimulus(query="...", expected="triangle")
-    response = ModelResponse(text="circle")
-    assert task.score(response, s) is False
+    s = Stimulus(query="", expected="3", metadata={})
+    assert task.score(ModelResponse(text="5"), s) is False
 
 
-def test_build_prompt_zero_shot(task):
+def test_score_perm_invariant_order_independent(task):
+    s = Stimulus(query="", expected="6 4 1 9", metadata={"perm_invariant": True})
+    assert task.score(ModelResponse(text="4 6 9 1]"), s) is True
+
+
+def test_score_perm_invariant_wrong_values(task):
+    s = Stimulus(query="", expected="6 4 1 9", metadata={"perm_invariant": True})
+    assert task.score(ModelResponse(text="6 4 1 8"), s) is False
+
+
+# ---------------------------------------------------------------------------
+# build_prompt
+# ---------------------------------------------------------------------------
+
+def test_build_prompt_zero_shot_is_raw_grid(task):
     s = Stimulus(
-        query="Row 1: circle | triangle | square\nRow 3: square | circle | ___",
-        expected="triangle",
+        query="[1] [2] [3]\n[4] [5] [6]\n[7] [8] [",
+        expected="9",
+        few_shot_examples=[("[0] [0] [0]\n[0] [0] [0]\n[0] [0] [", "0")],
+        metadata={},
     )
     prompt = task.build_prompt(s, Condition.ZERO_SHOT)
-    assert "Row 1" in prompt
-    assert "___" in prompt
+    assert prompt == s.query
+    assert "[0]" not in prompt
 
 
-def test_build_prompt_few_shot_includes_examples(task):
+def test_build_prompt_few_shot_prepends_completed_examples(task):
     s = Stimulus(
-        query="Row 1: X | Y | Z\nRow 3: Z | X | ___",
-        expected="Y",
-        few_shot_examples=[
-            ("Row 1: A | B | C\nRow 3: C | A | ___", "B"),
-        ],
+        query="[1] [2] [3]\n[4] [5] [6]\n[7] [8] [",
+        expected="9",
+        few_shot_examples=[("[3] [5] [7]\n[1] [3] [5]\n[5] [7] [", "9")],
+        metadata={},
     )
     prompt = task.build_prompt(s, Condition.FEW_SHOT)
-    assert "Row 1: A | B | C" in prompt
-    assert "Row 1: X | Y | Z" in prompt
-
-
-def test_build_prompt_zero_shot_excludes_examples(task):
-    s = Stimulus(
-        query="Row 1: X | Y | Z\nRow 3: Z | X | ___",
-        expected="Y",
-        few_shot_examples=[
-            ("Row 1: A | B | C\nRow 3: C | A | ___", "B"),
-        ],
-    )
-    prompt = task.build_prompt(s, Condition.ZERO_SHOT)
-    assert "Row 1: A | B | C" not in prompt
+    assert "[3] [5] [7]" in prompt
+    assert "[5] [7] [9]" in prompt  # example answer filled in
+    assert "[7] [8] [" in prompt    # test query preserved
