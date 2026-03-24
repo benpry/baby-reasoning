@@ -1,0 +1,32 @@
+[
+  {
+    "query": "Row 1: circle | triangle | square\nRow 2: triangle | square | circle\nRow 3: square | circle | ___",
+    "expected": "triangle",
+    "few_shot_examples": [],
+    "metadata": {
+      "rule": "rotation",
+      "attributes": ["shape"],
+      "source": "Webb 2023"
+    }
+  },
+  {
+    "query": "Row 1: large circle | medium circle | small circle\nRow 2: large triangle | medium triangle | small triangle\nRow 3: large square | medium square | ___",
+    "expected": "small square",
+    "few_shot_examples": [],
+    "metadata": {
+      "rule": "size-progression",
+      "attributes": ["size", "shape"],
+      "source": "Webb 2023"
+    }
+  },
+  {
+    "query": "Row 1: red circle | blue circle | green circle\nRow 2: red triangle | blue triangle | green triangle\nRow 3: red square | blue square | ___",
+    "expected": "green square",
+    "few_shot_examples": [],
+    "metadata": {
+      "rule": "color-constant",
+      "attributes": ["color", "shape"],
+      "source": "Webb 2023"
+    }
+  }
+]
