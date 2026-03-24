@@ -49,10 +49,17 @@ def test_score_incorrect(task):
 
 
 def test_build_prompt_zero_shot(task):
-    s = Stimulus(query="AA BB", expected="same")
+    s = Stimulus(
+        query="AA BB",
+        expected="same",
+        few_shot_examples=[("CC DD", "same"), ("GH IJ", "different")],
+    )
     prompt = task.build_prompt(s, Condition.ZERO_SHOT)
     assert "AA BB" in prompt
     assert "same" in prompt or "different" in prompt
+    # Zero-shot must not include the few-shot examples
+    assert "CC DD" not in prompt
+    assert "GH IJ" not in prompt
 
 
 def test_build_prompt_few_shot_includes_examples(task):
