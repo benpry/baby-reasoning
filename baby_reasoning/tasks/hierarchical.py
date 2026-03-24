@@ -41,9 +41,10 @@ class HierarchicalTask(Task):
         pair1 = _random_pair(rel1)
         pair2 = _random_pair(rel2)
         meta_rel = "same" if rel1 == rel2 else "different"
-        r1_str = "same" if rel1 else "different"
-        r2_str = "same" if rel2 else "different"
-        pattern = f"{r1_str}-{r2_str}"
+        if rel1 == rel2:
+            pattern = "same-same" if rel1 else "different-different"
+        else:
+            pattern = "same-different"
 
         examples = []
         for _ in range(3):
