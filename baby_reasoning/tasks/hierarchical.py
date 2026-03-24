@@ -8,15 +8,6 @@ from baby_reasoning.tasks.base import Condition, ModelResponse, Stimulus, Task
 _LETTERS = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 
-def _random_pair(same: bool) -> str:
-    pool = _LETTERS.copy()
-    random.shuffle(pool)
-    if same:
-        return pool[0] * 2
-    else:
-        return pool[0] + pool[1]
-
-
 class HierarchicalTask(Task):
     """Hierarchical equality task: judge whether two pairs share the same Level-1 relation."""
 

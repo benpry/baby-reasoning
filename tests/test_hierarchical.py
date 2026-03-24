@@ -30,6 +30,22 @@ def test_generate_stimulus_returns_valid_stimulus(task):
     )
 
 
+def test_generate_stimulus_letters_unique_across_pairs(task):
+    s = task.generate_stimulus()
+    # Collect all letters used in the query pair and every few-shot example pair
+    all_queries = [s.query] + [ex[0] for ex in s.few_shot_examples]
+    # Each query is "XY ZW" — split into two 2-char tokens, each token is one pair
+    all_pairs = [pair for q in all_queries for pair in q.split()]
+    # Flatten to individual letters (a same-pair like "AA" uses one unique letter)
+    letters_per_pair = [set(pair) for pair in all_pairs]
+    seen = set()
+    for letter_set in letters_per_pair:
+        assert letter_set.isdisjoint(seen), (
+            f"Letter overlap detected across pairs in stimulus: {all_queries}"
+        )
+        seen |= letter_set
+
+
 def test_score_correct(task):
     s = Stimulus(query="AA BB", expected="same")
     response = ModelResponse(text="same")
