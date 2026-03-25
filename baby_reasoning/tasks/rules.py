@@ -7,10 +7,26 @@ from baby_reasoning import DATA_DIR
 from baby_reasoning.tasks.base import Condition, ModelResponse, Stimulus, Task
 
 _SYLLABLES = [
-    "ga", "ti", "li", "na", "ta", "da",
-    "wo", "fe", "de", "ro", "ba", "fo",
-    "bi", "ku", "me", "si", "pe", "zo",
-    "re", "vi",
+    "ga",
+    "ti",
+    "li",
+    "na",
+    "ta",
+    "da",
+    "wo",
+    "fe",
+    "de",
+    "ro",
+    "ba",
+    "fo",
+    "bi",
+    "ku",
+    "me",
+    "si",
+    "pe",
+    "zo",
+    "re",
+    "vi",
 ]
 
 _RULES = ("ABA", "ABB")
@@ -57,7 +73,9 @@ class RulesTask(Task):
 
         examples = []
         for i in range(3):
-            ea, eb, ex_ans = _make_triplet(example_syllables[i * 2], example_syllables[i * 2 + 1], rule)
+            ea, eb, ex_ans = _make_triplet(
+                example_syllables[i * 2], example_syllables[i * 2 + 1], rule
+            )
             examples.append((f"{ea} {eb}", ex_ans))
 
         return Stimulus(

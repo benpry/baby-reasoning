@@ -101,7 +101,9 @@ class MatrixTask(Task):
         examples = [
             (
                 _prob_to_query(fs_data["prob"][i]),
-                _format_answer(fs_data["answer_choices"][i][int(fs_data["correct_ind"][i])]),
+                _format_answer(
+                    fs_data["answer_choices"][i][int(fs_data["correct_ind"][i])]
+                ),
             )
             for i in fs_indices
         ]
@@ -142,7 +144,8 @@ class MatrixTask(Task):
         # Exclude types where every problem in the test range has an empty correct answer
         # (e.g. AND_permuted: all 100 correct answers are the empty intersection set).
         valid_types = [
-            rt for rt, d in all_problems.items()
+            rt
+            for rt, d in all_problems.items()
             if any(
                 not _answer_is_empty(d["answer_choices"][i][int(d["correct_ind"][i])])
                 for i in range(len(d["prob"]) - _N_FEW_SHOT)
