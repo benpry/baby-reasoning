@@ -1,11 +1,11 @@
 [
   {
-    "query": "AA BB",
-    "expected": "same",
+    "query": "AABB",
+    "expected": "1",
     "few_shot_examples": [
-      ["CC DD", "same"],
-      ["EF GH", "same"],
-      ["IJ KK", "different"]
+      ["CCDD", "1"],
+      ["EFGH", "1"],
+      ["IJKK", "0"]
     ],
     "metadata": {
       "pattern": "same-same",
@@ -13,12 +13,12 @@
     }
   },
   {
-    "query": "LL MN",
-    "expected": "different",
+    "query": "LLMN",
+    "expected": "0",
     "few_shot_examples": [
-      ["OO PP", "same"],
-      ["QR ST", "same"],
-      ["UU VW", "different"]
+      ["OOPP", "1"],
+      ["QRST", "1"],
+      ["UUVW", "0"]
     ],
     "metadata": {
       "pattern": "same-different",
@@ -26,12 +26,12 @@
     }
   },
   {
-    "query": "XY ZA",
-    "expected": "same",
+    "query": "XYZA",
+    "expected": "1",
     "few_shot_examples": [
-      ["BB CC", "same"],
-      ["DE FG", "same"],
-      ["HI JJ", "different"]
+      ["BBCC", "1"],
+      ["DEFG", "1"],
+      ["HIJJ", "0"]
     ],
     "metadata": {
       "pattern": "different-different",
@@ -39,12 +39,12 @@
     }
   },
   {
-    "query": "KL MM",
-    "expected": "different",
+    "query": "KLMM",
+    "expected": "0",
     "few_shot_examples": [
-      ["NN OP", "different"],
-      ["QR SS", "different"],
-      ["TT UV", "different"]
+      ["NNOP", "0"],
+      ["QRSS", "0"],
+      ["TTUV", "0"]
     ],
     "metadata": {
       "pattern": "same-different",

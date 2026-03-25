@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import dataclasses
 import json
 import re
@@ -38,8 +39,14 @@ def evaluate(
     for stimulus in stimuli:
         prompt = task.build_prompt(stimulus, condition)
         response = backend.generate(prompt)
-        correct = task.score(response, stimulus)
-        logprob_correct = backend.score_completion(prompt, stimulus.expected)
+        if stimulus.answer_choices is not None:
+            logprobs = {c: backend.score_completion(prompt, c) for c in stimulus.answer_choices}
+            best = max(logprobs, key=lambda c: logprobs[c] if logprobs[c] is not None else float("-inf"))
+            correct = best == stimulus.expected
+            logprob_correct = logprobs.get(stimulus.expected)
+        else:
+            correct = task.score(response, stimulus)
+            logprob_correct = backend.score_completion(prompt, stimulus.expected)
         score = TrialScore(correct=correct, logprob_correct=logprob_correct)
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
         results.append(

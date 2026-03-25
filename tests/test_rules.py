@@ -10,7 +10,7 @@ def task():
 
 def test_canonical_stimuli_loads(task):
     stimuli = task.canonical_stimuli()
-    assert len(stimuli) >= 3
+    assert len(stimuli) >= 2
     for s in stimuli:
         assert isinstance(s, Stimulus)
         assert s.query
@@ -20,7 +20,21 @@ def test_canonical_stimuli_loads(task):
 def test_canonical_stimuli_have_metadata(task):
     stimuli = task.canonical_stimuli()
     rules = {s.metadata["rule"] for s in stimuli}
-    assert rules == {"ABA", "ABB", "AAB"}
+    # AAB dropped: only the two rules from Marcus 1999
+    assert rules == {"ABA", "ABB"}
+
+
+def test_canonical_stimuli_no_underscores(task):
+    for s in task.canonical_stimuli():
+        assert "___" not in s.query
+        for ex_query, _ in s.few_shot_examples:
+            assert "___" not in ex_query
+
+
+def test_canonical_stimuli_have_answer_choices(task):
+    for s in task.canonical_stimuli():
+        assert s.answer_choices is not None
+        assert len(s.answer_choices) == 2
 
 
 def test_generate_stimulus_returns_valid_stimulus(task):
@@ -28,48 +42,77 @@ def test_generate_stimulus_returns_valid_stimulus(task):
     assert isinstance(s, Stimulus)
     assert s.query
     assert s.expected
-    assert s.metadata.get("rule") in ("ABA", "ABB", "AAB")
+    assert s.metadata.get("rule") in ("ABA", "ABB")
+
+
+def test_generate_stimulus_no_underscores(task):
+    for _ in range(10):
+        s = task.generate_stimulus()
+        assert "___" not in s.query
+        for ex_query, _ in s.few_shot_examples:
+            assert "___" not in ex_query
+
+
+def test_generate_stimulus_has_answer_choices(task):
+    s = task.generate_stimulus()
+    assert s.answer_choices is not None
+    assert len(s.answer_choices) == 2
+    # Answer choices are the two syllables in the query
+    a, b = s.query.split()
+    assert set(s.answer_choices) == {a, b}
+
+
+def test_generate_stimulus_expected_is_one_of_query_syllables(task):
+    for _ in range(10):
+        s = task.generate_stimulus()
+        a, b = s.query.split()
+        assert s.expected in (a, b)
 
 
 def test_score_correct(task):
-    s = Stimulus(query="de ro ___", expected="ro", metadata={"rule": "ABB"})
-    response = ModelResponse(text="ro")
-    assert task.score(response, s) is True
+    s = Stimulus(query="de ro", expected="ro", metadata={"rule": "ABB"})
+    assert task.score(ModelResponse(text="ro"), s) is True
 
 
 def test_score_correct_with_extra_whitespace(task):
-    s = Stimulus(query="de ro ___", expected="ro", metadata={"rule": "ABB"})
-    response = ModelResponse(text="  ro  \n")
-    assert task.score(response, s) is True
+    s = Stimulus(query="de ro", expected="ro", metadata={"rule": "ABB"})
+    assert task.score(ModelResponse(text="  ro  \n"), s) is True
 
 
 def test_score_incorrect(task):
-    s = Stimulus(query="de ro ___", expected="ro", metadata={"rule": "ABB"})
-    response = ModelResponse(text="de")
-    assert task.score(response, s) is False
+    s = Stimulus(query="de ro", expected="ro", metadata={"rule": "ABB"})
+    assert task.score(ModelResponse(text="de"), s) is False
 
 
-def test_build_prompt_zero_shot(task):
+def test_build_prompt_zero_shot_is_two_syllables(task):
     s = Stimulus(
-        query="de ro ___",
+        query="de ro",
         expected="ro",
-        few_shot_examples=[("ga ti ___", "ti")],
+        few_shot_examples=[("ga ti", "ti")],
         metadata={"rule": "ABB"},
     )
     prompt = task.build_prompt(s, Condition.ZERO_SHOT)
-    assert "de ro ___" in prompt
-    # Zero-shot: no examples included
-    assert "ga ti ___" not in prompt
+    assert "de ro" in prompt
+    # Zero-shot: no examples, no instruction text
+    assert "ga ti" not in prompt
+    assert "complete" not in prompt.lower()
+    assert "fill" not in prompt.lower()
 
 
-def test_build_prompt_few_shot(task):
+def test_build_prompt_few_shot_shows_complete_triplets(task):
     s = Stimulus(
-        query="de ro ___",
+        query="de ro",
         expected="ro",
-        few_shot_examples=[("ga ti ___", "ti"), ("li na ___", "na")],
+        few_shot_examples=[("ga ti", "ti"), ("li na", "na")],
         metadata={"rule": "ABB"},
     )
     prompt = task.build_prompt(s, Condition.FEW_SHOT)
-    assert "de ro ___" in prompt
-    assert "ga ti ___" in prompt
-    assert "li na ___" in prompt
+    # Examples appear as complete triplets: "ga ti ti", "li na na"
+    assert "ga ti ti" in prompt
+    assert "li na na" in prompt
+    # Query at end (without answer)
+    assert prompt.rstrip().endswith("de ro")
+    # No instruction text
+    assert "complete" not in prompt.lower()
+    assert "fill" not in prompt.lower()
+    assert "___" not in prompt

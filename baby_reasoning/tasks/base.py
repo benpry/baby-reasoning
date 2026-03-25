@@ -17,6 +17,7 @@ class Stimulus:
     expected: str
     few_shot_examples: list[tuple[str, str]] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
+    answer_choices: list[str] | None = None
 
 
 @dataclass

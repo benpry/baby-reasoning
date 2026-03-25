@@ -17,9 +17,15 @@ from baby_reasoning.runner import evaluate, save_results
 
 
 class StubBackend(ModelBackend):
-    def __init__(self, text: str = "ro", logprob: float | None = -1.5):
+    def __init__(
+        self,
+        text: str = "ro",
+        logprob: float | None = -1.5,
+        logprobs_by_completion: dict[str, float] | None = None,
+    ):
         self._text = text
         self._logprob = logprob
+        self._logprobs_by_completion = logprobs_by_completion or {}
 
     @property
     def model(self) -> str:
@@ -29,6 +35,8 @@ class StubBackend(ModelBackend):
         return ModelResponse(text=self._text)
 
     def score_completion(self, prompt: str, completion: str) -> float | None:
+        if completion in self._logprobs_by_completion:
+            return self._logprobs_by_completion[completion]
         return self._logprob
 
 
@@ -107,6 +115,43 @@ def test_save_results_writes_json(tmp_path):
     data = json.loads(path.read_text())
     assert isinstance(data, list)
     assert len(data) == 2
+
+
+def test_evaluate_forced_choice_correct_when_expected_has_highest_logprob():
+    # When answer_choices provided, correct = argmax(logprob) == expected
+    stimulus = Stimulus(
+        query="AABB ", expected="1", answer_choices=["0", "1"]
+    )
+    backend = StubBackend(logprobs_by_completion={"0": -3.0, "1": -1.0})
+    results = evaluate(StubTask(), backend, Condition.ZERO_SHOT, stimuli=[stimulus])
+    assert results[0].score.correct is True
+
+
+def test_evaluate_forced_choice_incorrect_when_expected_not_highest_logprob():
+    # generate() returns "1" (would be correct by text matching),
+    # but logprob("0") > logprob("1"), so forced-choice yields incorrect.
+    stimulus = Stimulus(
+        query="AABB ", expected="1", answer_choices=["0", "1"]
+    )
+    backend = StubBackend(text="1", logprobs_by_completion={"0": -1.0, "1": -3.0})
+    results = evaluate(StubTask(), backend, Condition.ZERO_SHOT, stimuli=[stimulus])
+    assert results[0].score.correct is False
+
+
+def test_evaluate_forced_choice_stores_logprob_of_expected():
+    stimulus = Stimulus(
+        query="AABB ", expected="1", answer_choices=["0", "1"]
+    )
+    backend = StubBackend(logprobs_by_completion={"0": -3.0, "1": -1.5})
+    results = evaluate(StubTask(), backend, Condition.ZERO_SHOT, stimuli=[stimulus])
+    assert results[0].score.logprob_correct == pytest.approx(-1.5)
+
+
+def test_evaluate_without_answer_choices_uses_free_generation():
+    # Existing behavior preserved when answer_choices is None
+    stimulus = Stimulus(query="de ro", expected="ro")
+    results = evaluate(StubTask(), StubBackend(text="ro"), Condition.ZERO_SHOT, stimuli=[stimulus])
+    assert results[0].score.correct is True
 
 
 def test_save_results_path_structure(tmp_path):

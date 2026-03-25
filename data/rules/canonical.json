@@ -1,11 +1,12 @@
 [
   {
-    "query": "ba po ___",
+    "query": "ba po",
     "expected": "po",
+    "answer_choices": ["ba", "po"],
     "few_shot_examples": [
-      ["ga ti ___", "ti"],
-      ["li na ___", "na"],
-      ["ta da ___", "da"]
+      ["ga ti", "ti"],
+      ["li na", "na"],
+      ["ta da", "da"]
     ],
     "metadata": {
       "rule": "ABB",
@@ -14,31 +15,18 @@
     }
   },
   {
-    "query": "ba po ___",
+    "query": "ba po",
     "expected": "ba",
+    "answer_choices": ["ba", "po"],
     "few_shot_examples": [
-      ["ga ti ___", "ga"],
-      ["li na ___", "li"],
-      ["ta da ___", "ta"]
+      ["ga ti", "ga"],
+      ["li na", "li"],
+      ["ta da", "ta"]
     ],
     "metadata": {
       "rule": "ABA",
       "source": "Marcus 1999",
       "note": "Test syllables ba/po are novel relative to few-shot syllables ga/ti/li/na/ta/da"
-    }
-  },
-  {
-    "query": "ba ___ po",
-    "expected": "ba",
-    "few_shot_examples": [
-      ["ga ___ ti", "ga"],
-      ["li ___ na", "li"],
-      ["ta ___ da", "ta"]
-    ],
-    "metadata": {
-      "rule": "AAB",
-      "source": "Marcus 1999 (extended)",
-      "note": "AAB extends the Marcus paradigm; test syllables ba/po are novel"
     }
   }
 ]

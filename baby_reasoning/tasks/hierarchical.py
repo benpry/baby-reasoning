@@ -7,10 +7,17 @@ from baby_reasoning import DATA_DIR
 from baby_reasoning.tasks.base import Condition, ModelResponse, Stimulus, Task
 
 _LETTERS = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+_ANSWER_CHOICES = ["0", "1"]
 
 
 class HierarchicalTask(Task):
-    """Hierarchical equality task: judge whether two pairs share the same Level-1 relation."""
+    """Hierarchical equality task (Marcus 2001 / Geiger 2022).
+
+    Each stimulus is a pair of two-letter pairs concatenated with no spaces,
+    e.g. "AABB" (same-same) or "ABCD" (different-different).
+    The label is "1" when both pairs share the same Level-1 relation and
+    "0" when they differ — discovered by the model purely through ICL.
+    """
 
     _DATA_PATH = DATA_DIR / "hierarchical" / "canonical.json"
 
@@ -23,6 +30,7 @@ class HierarchicalTask(Task):
                 expected=item["expected"],
                 few_shot_examples=[tuple(e) for e in item.get("few_shot_examples", [])],
                 metadata=item.get("metadata", {}),
+                answer_choices=_ANSWER_CHOICES,
             )
             for item in items
         ]
@@ -46,7 +54,7 @@ class HierarchicalTask(Task):
         rel2 = random.choice([True, False])
         pair1 = next_pair(rel1)
         pair2 = next_pair(rel2)
-        meta_rel = "same" if rel1 == rel2 else "different"
+        label = "1" if rel1 == rel2 else "0"
 
         if rel1 == rel2:
             pattern = "same-same" if rel1 else "different-different"
@@ -59,32 +67,23 @@ class HierarchicalTask(Task):
             e_rel2 = random.choice([True, False])
             e_pair1 = next_pair(e_rel1)
             e_pair2 = next_pair(e_rel2)
-            e_answer = "same" if e_rel1 == e_rel2 else "different"
-            examples.append((f"{e_pair1} {e_pair2}", e_answer))
+            e_label = "1" if e_rel1 == e_rel2 else "0"
+            examples.append((e_pair1 + e_pair2, e_label))
 
         return Stimulus(
-            query=f"{pair1} {pair2}",
-            expected=meta_rel,
+            query=pair1 + pair2,
+            expected=label,
             few_shot_examples=examples,
             metadata={"pattern": pattern, "source": "generated"},
+            answer_choices=_ANSWER_CHOICES,
         )
 
     def score(self, response: ModelResponse, stimulus: Stimulus) -> bool:
-        return response.text.strip().lower() == stimulus.expected.strip().lower()
+        return response.text.strip() == stimulus.expected.strip()
 
     def build_prompt(self, stimulus: Stimulus, condition: Condition) -> str:
-        lines = [
-            "Two pairs of letters are shown. Each pair is either 'same' (both letters identical)",
-            "or 'different' (letters differ). Judge whether the two pairs share the SAME",
-            "first-level relationship, or have DIFFERENT first-level relationships.",
-            "Answer with only 'same' or 'different'.",
-            "",
-        ]
         if condition == Condition.FEW_SHOT:
-            lines.append("Examples:")
-            for query, answer in stimulus.few_shot_examples:
-                lines.append(f"  {query} → {answer}")
-            lines.append("")
-        lines.append(f"Pairs: {stimulus.query}")
-        lines.append("Answer:")
-        return "\n".join(lines)
+            lines = [f"{q} {a}" for q, a in stimulus.few_shot_examples]
+            lines.append(stimulus.query)
+            return "\n".join(lines)
+        return stimulus.query
