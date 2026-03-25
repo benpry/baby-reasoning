@@ -5,10 +5,10 @@ import random
 import numpy as np
 
 from baby_reasoning import DATA_DIR
-from baby_reasoning.tasks.base import Condition, ModelResponse, Stimulus, Task
+from baby_reasoning.tasks.base import ModelResponse, Stimulus, Task
 
-# Number of problems reserved at the end of each type for few-shot examples.
-_N_FEW_SHOT = 3
+# Default number of problems reserved at the end of each type for few-shot examples.
+_DEFAULT_N_EXAMPLES = 3
 # Number of canonical test stimuli taken from the start of each type.
 _N_CANONICAL_PER_TYPE = 5
 
@@ -93,9 +93,10 @@ class MatrixTask(Task):
         rule_type: str,
         perm_invariant: bool,
         fs_data: dict,
+        n_examples: int = _DEFAULT_N_EXAMPLES,
     ) -> Stimulus:
         n = len(fs_data["prob"])
-        fs_indices = range(n - _N_FEW_SHOT, n)
+        fs_indices = range(n - n_examples, n)
         query = _prob_to_query(prob)
         expected = _format_answer(answer_choices[correct_ind])
         examples = [
@@ -118,7 +119,7 @@ class MatrixTask(Task):
         all_problems = self._load()
         stimuli = []
         for rule_type, data in all_problems.items():
-            n_test = len(data["prob"]) - _N_FEW_SHOT
+            n_test = len(data["prob"]) - _DEFAULT_N_EXAMPLES
             added = 0
             for i in range(n_test):
                 if added >= _N_CANONICAL_PER_TYPE:
@@ -139,7 +140,7 @@ class MatrixTask(Task):
                 added += 1
         return stimuli
 
-    def generate_stimulus(self) -> Stimulus:
+    def generate_stimulus(self, n_examples: int = _DEFAULT_N_EXAMPLES) -> Stimulus:
         all_problems = self._load()
         # Exclude types where every problem in the test range has an empty correct answer
         # (e.g. AND_permuted: all 100 correct answers are the empty intersection set).
@@ -148,12 +149,12 @@ class MatrixTask(Task):
             for rt, d in all_problems.items()
             if any(
                 not _answer_is_empty(d["answer_choices"][i][int(d["correct_ind"][i])])
-                for i in range(len(d["prob"]) - _N_FEW_SHOT)
+                for i in range(len(d["prob"]) - n_examples)
             )
         ]
         rule_type = random.choice(valid_types)
         data = all_problems[rule_type]
-        n_test = len(data["prob"]) - _N_FEW_SHOT
+        n_test = len(data["prob"]) - n_examples
         # Sample until we find a problem with a non-empty correct answer
         indices = list(range(n_test))
         random.shuffle(indices)
@@ -168,26 +169,28 @@ class MatrixTask(Task):
             rule_type,
             data["perm_invariant"],
             data,
+            n_examples=n_examples,
         )
 
     def score(self, response: ModelResponse, stimulus: Stimulus) -> bool:
-        # Strip trailing ] that the model may include when completing [content]
-        text = response.text.strip().rstrip("]").strip()
+        # Extract just the first cell content (before the closing ])
+        text = response.text.split("]")[0].strip()
         expected = stimulus.expected.strip()
         if stimulus.metadata.get("perm_invariant", False):
             return set(text.split()) == set(expected.split())
         return text == expected
 
-    def build_prompt(self, stimulus: Stimulus, condition: Condition) -> str:
+    def build_prompt(self, stimulus: Stimulus, n_examples: int) -> str:
         """Return the prompt for this stimulus.
 
-        Zero-shot: the raw grid ending with ``[`` (following Webb et al. 2023).
-        Few-shot: completed example grids (answer filled in) prepended, then
+        n_examples=0: the raw grid ending with ``[`` (following Webb et al. 2023).
+        n_examples>0: completed example grids (answer filled in) prepended, then
         the test grid ending with ``[``.
         """
-        if condition == Condition.FEW_SHOT and stimulus.few_shot_examples:
+        if n_examples > 0 and stimulus.few_shot_examples:
+            examples = stimulus.few_shot_examples[:n_examples]
             parts = []
-            for ex_query, ex_answer in stimulus.few_shot_examples:
+            for ex_query, ex_answer in examples:
                 # Fill in the answer to create a complete grid as context
                 parts.append(ex_query + ex_answer + "]")
                 parts.append("")

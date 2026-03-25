@@ -4,7 +4,7 @@ import json
 import random
 
 from baby_reasoning import DATA_DIR
-from baby_reasoning.tasks.base import Condition, ModelResponse, Stimulus, Task
+from baby_reasoning.tasks.base import ModelResponse, Stimulus, Task
 
 _SYLLABLES = [
     "ga",
@@ -64,7 +64,7 @@ class RulesTask(Task):
             for item in items
         ]
 
-    def generate_stimulus(self) -> Stimulus:
+    def generate_stimulus(self, n_examples: int = 3) -> Stimulus:
         rule = random.choice(_RULES)
         pool = _SYLLABLES.copy()
         random.shuffle(pool)
@@ -72,7 +72,7 @@ class RulesTask(Task):
         example_syllables = pool[2:]
 
         examples = []
-        for i in range(3):
+        for i in range(n_examples):
             ea, eb, ex_ans = _make_triplet(
                 example_syllables[i * 2], example_syllables[i * 2 + 1], rule
             )
@@ -86,12 +86,42 @@ class RulesTask(Task):
             answer_choices=[a, b],
         )
 
+    def systematic_stimuli(self, n_per_rule: int, n_examples: int) -> list[Stimulus]:
+        """Generate stimuli covering each rule with ``n_per_rule`` instances."""
+        stimuli = []
+        for rule in _RULES:
+            for _ in range(n_per_rule):
+                pool = _SYLLABLES.copy()
+                random.shuffle(pool)
+                a, b, expected = _make_triplet(pool[0], pool[1], rule)
+                example_syllables = pool[2:]
+                examples = []
+                for i in range(n_examples):
+                    ea, eb, ex_ans = _make_triplet(
+                        example_syllables[i * 2], example_syllables[i * 2 + 1], rule
+                    )
+                    examples.append((f"{ea} {eb}", ex_ans))
+                stimuli.append(
+                    Stimulus(
+                        query=f"{a} {b}",
+                        expected=expected,
+                        few_shot_examples=examples,
+                        metadata={"rule": rule, "source": "systematic"},
+                        answer_choices=[a, b],
+                    )
+                )
+        return stimuli
+
+    def format_completion(self, stimulus: Stimulus, choice: str) -> str:
+        return " " + choice
+
     def score(self, response: ModelResponse, stimulus: Stimulus) -> bool:
         return response.text.strip().lower() == stimulus.expected.strip().lower()
 
-    def build_prompt(self, stimulus: Stimulus, condition: Condition) -> str:
-        if condition == Condition.FEW_SHOT:
-            lines = [f"{q} {a}" for q, a in stimulus.few_shot_examples]
+    def build_prompt(self, stimulus: Stimulus, n_examples: int) -> str:
+        if n_examples > 0 and stimulus.few_shot_examples:
+            examples = stimulus.few_shot_examples[:n_examples]
+            lines = [f"{q} {a}" for q, a in examples]
             lines.append(stimulus.query)
             return "\n".join(lines)
         return stimulus.query

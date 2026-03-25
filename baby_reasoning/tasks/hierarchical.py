@@ -4,10 +4,43 @@ import json
 import random
 
 from baby_reasoning import DATA_DIR
-from baby_reasoning.tasks.base import Condition, ModelResponse, Stimulus, Task
+from baby_reasoning.tasks.base import ModelResponse, Stimulus, Task
 
 _LETTERS = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 _ANSWER_CHOICES = ["0", "1"]
+_PATTERNS = {
+    "same-same": (True, True),
+    "same-different": (True, False),
+    "different-different": (False, False),
+}
+
+
+def _random_pair(same: bool) -> str:
+    """Return a random two-letter pair. Letters are unique within the pair."""
+    a, b = random.sample(_LETTERS, 2)
+    if same:
+        return a * 2
+    return a + b
+
+
+def _make_query_and_examples(
+    rel1: bool, rel2: bool, n_examples: int
+) -> tuple[str, list[tuple[str, str]]]:
+    """Build a query and independent few-shot examples.
+
+    Each example draws its own letters so the pool is never exhausted.
+    """
+    query = _random_pair(rel1) + _random_pair(rel2)
+
+    examples = []
+    for _ in range(n_examples):
+        e_rel1 = random.choice([True, False])
+        e_rel2 = random.choice([True, False])
+        e_query = _random_pair(e_rel1) + _random_pair(e_rel2)
+        e_label = "1" if e_rel1 == e_rel2 else "0"
+        examples.append((e_query, e_label))
+
+    return query, examples
 
 
 class HierarchicalTask(Task):
@@ -35,25 +68,9 @@ class HierarchicalTask(Task):
             for item in items
         ]
 
-    def generate_stimulus(self) -> Stimulus:
-        pool = _LETTERS.copy()
-        random.shuffle(pool)
-        letter_idx = 0
-
-        def next_pair(same: bool) -> str:
-            nonlocal letter_idx
-            if same:
-                pair = pool[letter_idx] * 2
-                letter_idx += 1
-            else:
-                pair = pool[letter_idx] + pool[letter_idx + 1]
-                letter_idx += 2
-            return pair
-
+    def generate_stimulus(self, n_examples: int = 3) -> Stimulus:
         rel1 = random.choice([True, False])
         rel2 = random.choice([True, False])
-        pair1 = next_pair(rel1)
-        pair2 = next_pair(rel2)
         label = "1" if rel1 == rel2 else "0"
 
         if rel1 == rel2:
@@ -61,29 +78,57 @@ class HierarchicalTask(Task):
         else:
             pattern = "same-different"
 
-        examples = []
-        for _ in range(3):
-            e_rel1 = random.choice([True, False])
-            e_rel2 = random.choice([True, False])
-            e_pair1 = next_pair(e_rel1)
-            e_pair2 = next_pair(e_rel2)
-            e_label = "1" if e_rel1 == e_rel2 else "0"
-            examples.append((e_pair1 + e_pair2, e_label))
+        query, examples = _make_query_and_examples(rel1, rel2, n_examples)
 
         return Stimulus(
-            query=pair1 + pair2,
+            query=query,
             expected=label,
             few_shot_examples=examples,
             metadata={"pattern": pattern, "source": "generated"},
             answer_choices=_ANSWER_CHOICES,
         )
 
+    def _generate_for_pattern(
+        self, rel1: bool, rel2: bool, n_examples: int
+    ) -> Stimulus:
+        """Generate a stimulus with forced rel1/rel2 for the query."""
+        label = "1" if rel1 == rel2 else "0"
+
+        if rel1 == rel2:
+            pattern = "same-same" if rel1 else "different-different"
+        else:
+            pattern = "same-different"
+
+        query, examples = _make_query_and_examples(rel1, rel2, n_examples)
+
+        return Stimulus(
+            query=query,
+            expected=label,
+            few_shot_examples=examples,
+            metadata={"pattern": pattern, "source": "systematic"},
+            answer_choices=_ANSWER_CHOICES,
+        )
+
+    def systematic_stimuli(
+        self, n_per_pattern: int, n_examples: int
+    ) -> list[Stimulus]:
+        """Generate stimuli covering each pattern with ``n_per_pattern`` instances."""
+        stimuli = []
+        for _pattern_name, (rel1, rel2) in _PATTERNS.items():
+            for _ in range(n_per_pattern):
+                stimuli.append(self._generate_for_pattern(rel1, rel2, n_examples))
+        return stimuli
+
+    def format_completion(self, stimulus: Stimulus, choice: str) -> str:
+        return " " + choice
+
     def score(self, response: ModelResponse, stimulus: Stimulus) -> bool:
         return response.text.strip() == stimulus.expected.strip()
 
-    def build_prompt(self, stimulus: Stimulus, condition: Condition) -> str:
-        if condition == Condition.FEW_SHOT:
-            lines = [f"{q} {a}" for q, a in stimulus.few_shot_examples]
+    def build_prompt(self, stimulus: Stimulus, n_examples: int) -> str:
+        if n_examples > 0 and stimulus.few_shot_examples:
+            examples = stimulus.few_shot_examples[:n_examples]
+            lines = [f"{q} {a}" for q, a in examples]
             lines.append(stimulus.query)
             return "\n".join(lines)
         return stimulus.query

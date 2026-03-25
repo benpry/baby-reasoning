@@ -8,7 +8,6 @@ from pathlib import Path
 
 from baby_reasoning import RESULTS_DIR
 from baby_reasoning.tasks.base import (
-    Condition,
     ModelBackend,
     Stimulus,
     Task,
@@ -27,7 +26,7 @@ def _task_name(task: Task) -> str:
 def evaluate(
     task: Task,
     backend: ModelBackend,
-    condition: Condition,
+    n_examples: int,
     stimuli: list[Stimulus] | None = None,
 ) -> list[TrialResult]:
     if stimuli is None:
@@ -37,23 +36,26 @@ def evaluate(
     results = []
 
     for stimulus in stimuli:
-        prompt = task.build_prompt(stimulus, condition)
+        prompt = task.build_prompt(stimulus, n_examples)
         response = backend.generate(prompt)
+        correct = task.score(response, stimulus)
         if stimulus.answer_choices is not None:
-            logprobs = {c: backend.score_completion(prompt, c) for c in stimulus.answer_choices}
-            best = max(logprobs, key=lambda c: logprobs[c] if logprobs[c] is not None else float("-inf"))
-            correct = best == stimulus.expected
+            logprobs = {
+                c: backend.score_completion(prompt, task.format_completion(stimulus, c))
+                for c in stimulus.answer_choices
+            }
             logprob_correct = logprobs.get(stimulus.expected)
         else:
-            correct = task.score(response, stimulus)
-            logprob_correct = backend.score_completion(prompt, stimulus.expected)
+            logprob_correct = backend.score_completion(
+                prompt, task.format_completion(stimulus, stimulus.expected)
+            )
         score = TrialScore(correct=correct, logprob_correct=logprob_correct)
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
         results.append(
             TrialResult(
                 model=backend.model,
                 task=task_name,
-                condition=condition,
+                n_examples=n_examples,
                 stimulus=stimulus,
                 response=response,
                 score=score,
@@ -68,22 +70,24 @@ def save_results(
     results: list[TrialResult],
     model: str,
     task: str,
-    condition: Condition,
+    n_examples: int,
     results_dir: Path | None = None,
+    run_id: str | None = None,
 ) -> Path:
     if results_dir is None:
         results_dir = RESULTS_DIR
 
-    model_tag = model.replace(":", "_")
-    ts = (
-        results[0].timestamp.replace(":", "-")
-        if results
-        else datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%S.%fZ")
-    )
+    model_tag = model.replace(":", "_").replace("/", "--")
+    if run_id is None:
+        run_id = (
+            results[0].timestamp.replace(":", "-")
+            if results
+            else datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%S.%fZ")
+        )
 
-    out_dir = results_dir / model_tag / task / condition.value
+    out_dir = results_dir / model_tag / run_id / task
     out_dir.mkdir(parents=True, exist_ok=True)
-    out_path = out_dir / f"{ts}.json"
+    out_path = out_dir / f"{n_examples}_examples.json"
 
     data = [dataclasses.asdict(r) for r in results]
     out_path.write_text(json.dumps(data, indent=2))

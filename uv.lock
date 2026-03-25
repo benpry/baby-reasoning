@@ -334,7 +334,13 @@ name = "baby-reasoning"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "jupyterlab" },
+    { name = "matplotlib" },
+    { name = "pandas", version = "2.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14'" },
+    { name = "pandas", version = "3.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14'" },
+    { name = "pytest" },
     { name = "requests" },
+    { name = "seaborn" },
     { name = "tyro" },
     { name = "vllm" },
 ]
@@ -354,21 +360,34 @@ notebook = [
     { name = "seaborn" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "pytest-mock" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "jupyter", marker = "extra == 'notebook'", specifier = ">=1.0" },
+    { name = "jupyterlab", specifier = ">=4.5.6" },
+    { name = "matplotlib", specifier = ">=3.10.8" },
     { name = "matplotlib", marker = "extra == 'notebook'", specifier = ">=3.8" },
     { name = "nbformat", marker = "extra == 'notebook'", specifier = ">=5.9" },
+    { name = "pandas", specifier = ">=2.3.3" },
     { name = "pandas", marker = "extra == 'notebook'", specifier = ">=2" },
+    { name = "pytest", specifier = ">=9.0.2" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8" },
     { name = "pytest-mock", marker = "extra == 'dev'", specifier = ">=3.12" },
     { name = "requests", specifier = ">=2.31" },
     { name = "responses", marker = "extra == 'dev'", specifier = ">=0.25" },
+    { name = "seaborn", specifier = ">=0.13.2" },
     { name = "seaborn", marker = "extra == 'notebook'", specifier = ">=0.13" },
     { name = "tyro", specifier = ">=0.9" },
     { name = "vllm", specifier = ">=0.18.0" },
 ]
 provides-extras = ["dev", "notebook"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest-mock", specifier = ">=3.15.1" }]
 
 [[package]]
 name = "beautifulsoup4"

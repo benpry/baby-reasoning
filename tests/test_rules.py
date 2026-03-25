@@ -1,5 +1,5 @@
 import pytest
-from baby_reasoning.tasks.base import Condition, ModelResponse, Stimulus
+from baby_reasoning.tasks.base import ModelResponse, Stimulus
 from baby_reasoning.tasks.rules import RulesTask
 
 
@@ -69,6 +69,39 @@ def test_generate_stimulus_expected_is_one_of_query_syllables(task):
         assert s.expected in (a, b)
 
 
+def test_generate_stimulus_n_examples_0(task):
+    s = task.generate_stimulus(n_examples=0)
+    assert s.few_shot_examples == []
+
+
+def test_generate_stimulus_n_examples_5(task):
+    s = task.generate_stimulus(n_examples=5)
+    assert len(s.few_shot_examples) == 5
+
+
+def test_systematic_stimuli_returns_correct_count(task):
+    stimuli = task.systematic_stimuli(n_per_rule=5, n_examples=3)
+    assert len(stimuli) == 10  # 5 per rule × 2 rules
+
+
+def test_systematic_stimuli_covers_both_rules(task):
+    stimuli = task.systematic_stimuli(n_per_rule=5, n_examples=3)
+    rules = {s.metadata["rule"] for s in stimuli}
+    assert rules == {"ABA", "ABB"}
+
+
+def test_systematic_stimuli_respects_n_examples(task):
+    stimuli = task.systematic_stimuli(n_per_rule=3, n_examples=5)
+    for s in stimuli:
+        assert len(s.few_shot_examples) == 5
+
+
+def test_systematic_stimuli_n_examples_0(task):
+    stimuli = task.systematic_stimuli(n_per_rule=3, n_examples=0)
+    for s in stimuli:
+        assert s.few_shot_examples == []
+
+
 def test_score_correct(task):
     s = Stimulus(query="de ro", expected="ro", metadata={"rule": "ABB"})
     assert task.score(ModelResponse(text="ro"), s) is True
@@ -84,29 +117,34 @@ def test_score_incorrect(task):
     assert task.score(ModelResponse(text="de"), s) is False
 
 
-def test_build_prompt_zero_shot_is_two_syllables(task):
+def test_format_completion_prepends_space(task):
+    s = Stimulus(query="de ro", expected="ro", metadata={"rule": "ABB"})
+    assert task.format_completion(s, "ro") == " ro"
+
+
+def test_build_prompt_zero_examples_is_two_syllables(task):
     s = Stimulus(
         query="de ro",
         expected="ro",
         few_shot_examples=[("ga ti", "ti")],
         metadata={"rule": "ABB"},
     )
-    prompt = task.build_prompt(s, Condition.ZERO_SHOT)
+    prompt = task.build_prompt(s, n_examples=0)
     assert "de ro" in prompt
-    # Zero-shot: no examples, no instruction text
+    # Zero examples: no examples, no instruction text
     assert "ga ti" not in prompt
     assert "complete" not in prompt.lower()
     assert "fill" not in prompt.lower()
 
 
-def test_build_prompt_few_shot_shows_complete_triplets(task):
+def test_build_prompt_with_examples_shows_complete_triplets(task):
     s = Stimulus(
         query="de ro",
         expected="ro",
         few_shot_examples=[("ga ti", "ti"), ("li na", "na")],
         metadata={"rule": "ABB"},
     )
-    prompt = task.build_prompt(s, Condition.FEW_SHOT)
+    prompt = task.build_prompt(s, n_examples=2)
     # Examples appear as complete triplets: "ga ti ti", "li na na"
     assert "ga ti ti" in prompt
     assert "li na na" in prompt
@@ -116,3 +154,16 @@ def test_build_prompt_few_shot_shows_complete_triplets(task):
     assert "complete" not in prompt.lower()
     assert "fill" not in prompt.lower()
     assert "___" not in prompt
+
+
+def test_build_prompt_n_examples_1_shows_one_example(task):
+    s = Stimulus(
+        query="de ro",
+        expected="ro",
+        few_shot_examples=[("ga ti", "ti"), ("li na", "na")],
+        metadata={"rule": "ABB"},
+    )
+    prompt = task.build_prompt(s, n_examples=1)
+    assert "ga ti ti" in prompt
+    assert "li na na" not in prompt
+    assert prompt.rstrip().endswith("de ro")

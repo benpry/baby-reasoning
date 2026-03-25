@@ -3,10 +3,10 @@ import requests
 from baby_reasoning.tasks.base import ModelBackend, ModelResponse
 
 
-class OllamaBackend(ModelBackend):
-    """ModelBackend implementation over the Ollama HTTP API."""
+class VLLMBackend(ModelBackend):
+    """ModelBackend implementation over the vLLM OpenAI-compatible API."""
 
-    def __init__(self, model: str, base_url: str = "http://localhost:11434") -> None:
+    def __init__(self, model: str, base_url: str = "http://localhost:8000") -> None:
         self._model = model
         self.base_url = base_url.rstrip("/")
 
@@ -16,7 +16,7 @@ class OllamaBackend(ModelBackend):
 
     def _post(self, payload: dict) -> dict:
         response = requests.post(
-            f"{self.base_url}/api/generate",
+            f"{self.base_url}/v1/completions",
             json=payload,
             timeout=120,
         )
@@ -28,44 +28,49 @@ class OllamaBackend(ModelBackend):
             {
                 "model": self.model,
                 "prompt": prompt,
-                "stream": False,
-                "logprobs": True,
-                "options": {"num_predict": 50},
+                "max_tokens": 50,
+                "logprobs": 1,
             }
         )
-        logprobs_data = data.get("logprobs")
+        choice = data["choices"][0]
+        logprobs_data = choice.get("logprobs")
         token_logprobs = (
             logprobs_data.get("token_logprobs")
             if isinstance(logprobs_data, dict)
             else None
         )
         return ModelResponse(
-            text=data.get("response", "").rstrip(),
+            text=choice.get("text", "").rstrip(),
             token_logprobs=token_logprobs,
         )
 
     def score_completion(self, prompt: str, completion: str) -> float | None:
-        """Return sum of token log probs for the completion, or None if unsupported.
+        """Return sum of token log probs for the completion only, or None if unsupported.
 
-        Note: Ollama's logprobs response covers the entire prompt+completion sequence,
-        not just the completion tokens. The returned value is therefore the joint
-        log probability of the full sequence, not the conditional log probability
-        of the completion given the prompt. Use for relative comparisons between
-        models on the same prompt, not as an absolute conditional probability.
+        Uses text_offset from the echoed response to identify which tokens
+        belong to the completion (offset >= len(prompt)) and sums only those.
         """
         data = self._post(
             {
                 "model": self.model,
                 "prompt": prompt + completion,
-                "stream": False,
-                "logprobs": True,
-                "options": {"num_predict": 0},
+                "max_tokens": 0,
+                "echo": True,
+                "logprobs": 1,
             }
         )
-        logprobs_data = data.get("logprobs")
+        choice = data["choices"][0]
+        logprobs_data = choice.get("logprobs")
         if not isinstance(logprobs_data, dict):
             return None
         token_logprobs = logprobs_data.get("token_logprobs")
         if token_logprobs is None:
             return None
-        return sum(token_logprobs)
+        text_offset = logprobs_data.get("text_offset")
+        if text_offset is None:
+            return None
+        prompt_len = len(prompt)
+        return sum(
+            lp for lp, off in zip(token_logprobs, text_offset)
+            if off >= prompt_len and lp is not None
+        )

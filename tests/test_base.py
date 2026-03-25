@@ -1,16 +1,10 @@
 from baby_reasoning.tasks.base import (
-    Condition,
     ModelBackend,
     ModelResponse,
     Stimulus,
     Task,
     TrialScore,
 )
-
-
-def test_condition_values():
-    assert Condition.ZERO_SHOT == "zero_shot"
-    assert Condition.FEW_SHOT == "few_shot"
 
 
 def test_stimulus_defaults():

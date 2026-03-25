@@ -2,13 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from enum import Enum
 from typing import Any
-
-
-class Condition(str, Enum):
-    ZERO_SHOT = "zero_shot"
-    FEW_SHOT = "few_shot"
 
 
 @dataclass
@@ -36,7 +30,7 @@ class TrialScore:
 class TrialResult:
     model: str
     task: str
-    condition: Condition
+    n_examples: int
     stimulus: Stimulus
     response: ModelResponse
     score: TrialScore
@@ -48,13 +42,21 @@ class Task(ABC):
     def canonical_stimuli(self) -> list[Stimulus]: ...
 
     @abstractmethod
-    def generate_stimulus(self) -> Stimulus: ...
+    def generate_stimulus(self, n_examples: int = 3) -> Stimulus: ...
 
     @abstractmethod
     def score(self, response: ModelResponse, stimulus: Stimulus) -> bool: ...
 
     @abstractmethod
-    def build_prompt(self, stimulus: Stimulus, condition: Condition) -> str: ...
+    def build_prompt(self, stimulus: Stimulus, n_examples: int) -> str: ...
+
+    def format_completion(self, stimulus: Stimulus, choice: str) -> str:
+        """Format an answer choice as it would appear appended to the prompt.
+
+        Override in subclasses where the model expects a delimiter (e.g. space)
+        between the prompt and the answer.
+        """
+        return choice
 
 
 class ModelBackend(ABC):

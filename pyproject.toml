@@ -7,7 +7,12 @@ name = "baby-reasoning"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
+    "jupyterlab>=4.5.6",
+    "matplotlib>=3.10.8",
+    "pandas>=2.3.3",
+    "pytest>=9.0.2",
     "requests>=2.31",
+    "seaborn>=0.13.2",
     "tyro>=0.9",
     "vllm>=0.18.0",
 ]
@@ -32,3 +37,8 @@ include = ["baby_reasoning*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest-mock>=3.15.1",
+]

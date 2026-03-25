@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from baby_reasoning.tasks.base import Condition, ModelResponse, Stimulus
+from baby_reasoning.tasks.base import ModelResponse, Stimulus
 from baby_reasoning.tasks.matrix import (
     MatrixTask,
     _answer_is_empty,
@@ -138,6 +138,11 @@ def test_generate_stimulus_has_three_few_shot_examples(task):
         assert len(ex_answer) > 0
 
 
+def test_generate_stimulus_n_examples_1(task):
+    s = task.generate_stimulus(n_examples=1)
+    assert len(s.few_shot_examples) == 1
+
+
 # ---------------------------------------------------------------------------
 # score
 # ---------------------------------------------------------------------------
@@ -155,6 +160,17 @@ def test_score_strips_brackets(task):
 def test_score_strips_trailing_bracket_multi_token(task):
     s = Stimulus(query="", expected="5 2 7", metadata={})
     assert task.score(ModelResponse(text="5 2 7]"), s) is True
+
+
+def test_score_correct_with_continued_generation(task):
+    """Model generates answer then keeps going: '3] [2] [2] [2]...'"""
+    s = Stimulus(query="", expected="3", metadata={})
+    assert task.score(ModelResponse(text="3] [2] [2] [2] [1] [27]"), s) is True
+
+
+def test_score_perm_invariant_with_continued_generation(task):
+    s = Stimulus(query="", expected="6 4 1 9", metadata={"perm_invariant": True})
+    assert task.score(ModelResponse(text="4 6 9 1] [3] [2]"), s) is True
 
 
 def test_score_does_not_match_response_with_leading_bracket(task):
@@ -183,26 +199,26 @@ def test_score_perm_invariant_wrong_values(task):
 # build_prompt
 # ---------------------------------------------------------------------------
 
-def test_build_prompt_zero_shot_is_raw_grid(task):
+def test_build_prompt_zero_examples_is_raw_grid(task):
     s = Stimulus(
         query="[1] [2] [3]\n[4] [5] [6]\n[7] [8] [",
         expected="9",
         few_shot_examples=[("[0] [0] [0]\n[0] [0] [0]\n[0] [0] [", "0")],
         metadata={},
     )
-    prompt = task.build_prompt(s, Condition.ZERO_SHOT)
+    prompt = task.build_prompt(s, n_examples=0)
     assert prompt == s.query
     assert "[0]" not in prompt
 
 
-def test_build_prompt_few_shot_prepends_completed_examples(task):
+def test_build_prompt_with_examples_prepends_completed_examples(task):
     s = Stimulus(
         query="[1] [2] [3]\n[4] [5] [6]\n[7] [8] [",
         expected="9",
         few_shot_examples=[("[3] [5] [7]\n[1] [3] [5]\n[5] [7] [", "9")],
         metadata={},
     )
-    prompt = task.build_prompt(s, Condition.FEW_SHOT)
+    prompt = task.build_prompt(s, n_examples=1)
     assert "[3] [5] [7]" in prompt
     assert "[5] [7] [9]" in prompt  # example answer filled in
     assert "[7] [8] [" in prompt    # test query preserved
