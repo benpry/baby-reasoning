@@ -114,7 +114,7 @@ def test_run_systematic_uses_systematic_stimuli(mocker):
     assert len(stimuli_arg) == 20  # 10 per rule × 2 rules
 
 
-def test_run_systematic_falls_back_to_random_for_matrix(mocker):
+def test_run_uses_all_stimuli_for_matrix(mocker):
     mock_evaluate = mocker.patch("baby_reasoning.cli.evaluate", return_value=[])
     mocker.patch("baby_reasoning.cli.save_results", return_value=Path("x"))
     mocker.patch("baby_reasoning.cli.VLLMBackend")
@@ -123,8 +123,23 @@ def test_run_systematic_falls_back_to_random_for_matrix(mocker):
     run(cfg)
 
     stimuli_arg = mock_evaluate.call_args[0][3]
+    from baby_reasoning.tasks.matrix import MatrixTask
     assert stimuli_arg is not None
-    assert len(stimuli_arg) == 5
+    assert len(stimuli_arg) == len(MatrixTask().all_stimuli())
+
+
+def test_run_uses_all_stimuli_for_matrix_easy(mocker):
+    mock_evaluate = mocker.patch("baby_reasoning.cli.evaluate", return_value=[])
+    mocker.patch("baby_reasoning.cli.save_results", return_value=Path("x"))
+    mocker.patch("baby_reasoning.cli.VLLMBackend")
+
+    cfg = Config(models=["m1"], tasks=["matrix_easy"], n_examples=[0], n_stimuli=5)
+    run(cfg)
+
+    stimuli_arg = mock_evaluate.call_args[0][3]
+    from baby_reasoning.tasks.matrix_easy import MatrixEasyTask
+    assert stimuli_arg is not None
+    assert len(stimuli_arg) == len(MatrixEasyTask().all_stimuli())
 
 
 def test_run_passes_results_dir_to_save(mocker):

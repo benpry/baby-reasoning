@@ -144,6 +144,30 @@ def test_generate_stimulus_n_examples_1(task):
 
 
 # ---------------------------------------------------------------------------
+# all_stimuli
+# ---------------------------------------------------------------------------
+
+def test_all_stimuli_covers_all_rule_types(task):
+    stimuli = task.all_stimuli()
+    rule_types = {s.metadata["rule_type"] for s in stimuli}
+    assert len(rule_types) == 31
+
+
+def test_all_stimuli_more_than_canonical(task):
+    assert len(task.all_stimuli()) > len(task.canonical_stimuli())
+
+
+def test_all_stimuli_have_nonempty_expected(task):
+    for s in task.all_stimuli():
+        assert len(s.expected) > 0
+
+
+def test_all_stimuli_have_three_few_shot_examples(task):
+    for s in task.all_stimuli():
+        assert len(s.few_shot_examples) == 3
+
+
+# ---------------------------------------------------------------------------
 # score
 # ---------------------------------------------------------------------------
 

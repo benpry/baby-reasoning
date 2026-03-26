@@ -140,6 +140,27 @@ class MatrixTask(Task):
                 added += 1
         return stimuli
 
+    def all_stimuli(self) -> list[Stimulus]:
+        all_problems = self._load()
+        stimuli = []
+        for rule_type, data in all_problems.items():
+            n_test = len(data["prob"]) - _DEFAULT_N_EXAMPLES
+            for i in range(n_test):
+                correct = data["answer_choices"][i][int(data["correct_ind"][i])]
+                if _answer_is_empty(correct):
+                    continue
+                stimuli.append(
+                    self._make_stimulus(
+                        data["prob"][i],
+                        data["answer_choices"][i],
+                        int(data["correct_ind"][i]),
+                        rule_type,
+                        data["perm_invariant"],
+                        data,
+                    )
+                )
+        return stimuli
+
     def generate_stimulus(self, n_examples: int = _DEFAULT_N_EXAMPLES) -> Stimulus:
         all_problems = self._load()
         # Exclude types where every problem in the test range has an empty correct answer

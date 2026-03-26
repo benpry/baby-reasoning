@@ -69,13 +69,12 @@ class RulesTask(Task):
         pool = _SYLLABLES.copy()
         random.shuffle(pool)
         a, b, expected = _make_triplet(pool[0], pool[1], rule)
-        example_syllables = pool[2:]
 
         examples = []
-        for i in range(n_examples):
-            ea, eb, ex_ans = _make_triplet(
-                example_syllables[i * 2], example_syllables[i * 2 + 1], rule
-            )
+        for _ in range(n_examples):
+            ex_pool = _SYLLABLES.copy()
+            random.shuffle(ex_pool)
+            ea, eb, ex_ans = _make_triplet(ex_pool[0], ex_pool[1], rule)
             examples.append((f"{ea} {eb}", ex_ans))
 
         return Stimulus(
@@ -94,12 +93,11 @@ class RulesTask(Task):
                 pool = _SYLLABLES.copy()
                 random.shuffle(pool)
                 a, b, expected = _make_triplet(pool[0], pool[1], rule)
-                example_syllables = pool[2:]
                 examples = []
-                for i in range(n_examples):
-                    ea, eb, ex_ans = _make_triplet(
-                        example_syllables[i * 2], example_syllables[i * 2 + 1], rule
-                    )
+                for _ in range(n_examples):
+                    ex_pool = _SYLLABLES.copy()
+                    random.shuffle(ex_pool)
+                    ea, eb, ex_ans = _make_triplet(ex_pool[0], ex_pool[1], rule)
                     examples.append((f"{ea} {eb}", ex_ans))
                 stimuli.append(
                     Stimulus(
@@ -116,7 +114,15 @@ class RulesTask(Task):
         return " " + choice
 
     def score(self, response: ModelResponse, stimulus: Stimulus) -> bool:
-        return response.text.strip().lower() == stimulus.expected.strip().lower()
+        # first for an exact match
+        if response.text.strip().lower() == stimulus.expected.strip().lower():
+            return True
+        else:
+            # then split based on whitespace and check if the first part matches the expected
+            return (
+                response.text.strip().split()[0].lower()
+                == stimulus.expected.strip().lower()
+            )
 
     def build_prompt(self, stimulus: Stimulus, n_examples: int) -> str:
         if n_examples > 0 and stimulus.few_shot_examples:

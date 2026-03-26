@@ -100,6 +100,16 @@ class MatrixEasyTask(Task):
                 stimuli.append(_make_stimulus(task, fs_pool, _DEFAULT_N_EXAMPLES))
         return stimuli
 
+    def all_stimuli(self) -> list[Stimulus]:
+        by_type = _load()
+        stimuli = []
+        for task_type, tasks in by_type.items():
+            test_tasks = tasks[:-_DEFAULT_N_EXAMPLES]
+            fs_pool = tasks[-_DEFAULT_N_EXAMPLES:]
+            for task in test_tasks:
+                stimuli.append(_make_stimulus(task, fs_pool, _DEFAULT_N_EXAMPLES))
+        return stimuli
+
     def generate_stimulus(self, n_examples: int = _DEFAULT_N_EXAMPLES) -> Stimulus:
         by_type = _load()
         task_type = random.choice(list(by_type.keys()))

@@ -74,6 +74,8 @@ def run(cfg: Config) -> None:
                     stimuli = task.systematic_stimuli(
                         **_systematic_kwargs(task, cfg.n_stimuli, max_n_examples)
                     )
+                elif hasattr(task, "all_stimuli"):
+                    stimuli = task.all_stimuli()
                 else:
                     stimuli = [
                         task.generate_stimulus(n_examples=max_n_examples)

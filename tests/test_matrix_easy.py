@@ -131,6 +131,32 @@ def test_generate_stimulus_default_has_three_few_shot_examples(task):
 
 
 # ---------------------------------------------------------------------------
+# all_stimuli
+# ---------------------------------------------------------------------------
+
+
+def test_all_stimuli_covers_all_types(task):
+    stimuli = task.all_stimuli()
+    types = {s.metadata["task_type"] for s in stimuli}
+    assert types == {"constancy", "pattern", "pattern_tuple", "progression", "logic_and", "logic_or_tuple"}
+
+
+def test_all_stimuli_more_than_canonical(task):
+    assert len(task.all_stimuli()) > len(task.canonical_stimuli())
+
+
+def test_all_stimuli_have_nonempty_expected(task):
+    for s in task.all_stimuli():
+        assert len(s.expected) > 0
+
+
+def test_all_stimuli_have_answer_choices(task):
+    for s in task.all_stimuli():
+        assert s.answer_choices is not None
+        assert len(s.answer_choices) == 4
+
+
+# ---------------------------------------------------------------------------
 # score
 # ---------------------------------------------------------------------------
 

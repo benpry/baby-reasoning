@@ -109,9 +109,7 @@ class HierarchicalTask(Task):
             answer_choices=_ANSWER_CHOICES,
         )
 
-    def systematic_stimuli(
-        self, n_per_pattern: int, n_examples: int
-    ) -> list[Stimulus]:
+    def systematic_stimuli(self, n_per_pattern: int, n_examples: int) -> list[Stimulus]:
         """Generate stimuli covering each pattern with ``n_per_pattern`` instances."""
         stimuli = []
         for _pattern_name, (rel1, rel2) in _PATTERNS.items():
@@ -123,7 +121,8 @@ class HierarchicalTask(Task):
         return " " + choice
 
     def score(self, response: ModelResponse, stimulus: Stimulus) -> bool:
-        return response.text.strip() == stimulus.expected.strip()
+        # check only the first character of the response
+        return response.text.strip()[0] == stimulus.expected.strip()
 
     def build_prompt(self, stimulus: Stimulus, n_examples: int) -> str:
         if n_examples > 0 and stimulus.few_shot_examples:

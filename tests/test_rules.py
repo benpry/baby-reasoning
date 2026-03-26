@@ -79,6 +79,17 @@ def test_generate_stimulus_n_examples_5(task):
     assert len(s.few_shot_examples) == 5
 
 
+def test_generate_stimulus_n_examples_20(task):
+    s = task.generate_stimulus(n_examples=20)
+    assert len(s.few_shot_examples) == 20
+
+
+def test_systematic_stimuli_n_examples_20(task):
+    stimuli = task.systematic_stimuli(n_per_rule=3, n_examples=20)
+    for s in stimuli:
+        assert len(s.few_shot_examples) == 20
+
+
 def test_systematic_stimuli_returns_correct_count(task):
     stimuli = task.systematic_stimuli(n_per_rule=5, n_examples=3)
     assert len(stimuli) == 10  # 5 per rule × 2 rules
