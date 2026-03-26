@@ -197,6 +197,51 @@ def test_evaluate_free_gen_uses_format_completion_for_logprob():
     assert results[0].score.logprob_correct == pytest.approx(-2.0)
 
 
+def test_evaluate_prob_correct_is_softmax_of_logprobs():
+    import math
+    stimulus = Stimulus(query="AABB ", expected="1", answer_choices=["0", "1"])
+    backend = StubBackend(logprobs_by_completion={"0": -3.0, "1": -1.0})
+    results = evaluate(StubTask(), backend, n_examples=0, stimuli=[stimulus])
+    # softmax: exp(-1) / (exp(-3) + exp(-1))
+    expected_prob = math.exp(-1.0) / (math.exp(-3.0) + math.exp(-1.0))
+    assert results[0].score.prob_correct == pytest.approx(expected_prob)
+
+
+def test_evaluate_prob_correct_lower_when_not_best_choice():
+    import math
+    stimulus = Stimulus(query="AABB ", expected="1", answer_choices=["0", "1"])
+    backend = StubBackend(logprobs_by_completion={"0": -1.0, "1": -3.0})
+    results = evaluate(StubTask(), backend, n_examples=0, stimuli=[stimulus])
+    expected_prob = math.exp(-3.0) / (math.exp(-1.0) + math.exp(-3.0))
+    assert results[0].score.prob_correct == pytest.approx(expected_prob)
+
+
+def test_evaluate_prob_correct_is_none_without_answer_choices():
+    stimulus = Stimulus(query="de ro", expected="ro")
+    results = evaluate(StubTask(), StubBackend(text="ro"), n_examples=0, stimuli=[stimulus])
+    assert results[0].score.prob_correct is None
+
+
+def test_evaluate_answer_logprobs_stores_all_choices():
+    stimulus = Stimulus(query="AABB ", expected="1", answer_choices=["0", "1"])
+    backend = StubBackend(logprobs_by_completion={"0": -3.0, "1": -1.0})
+    results = evaluate(StubTask(), backend, n_examples=0, stimuli=[stimulus])
+    assert results[0].score.answer_logprobs == {"0": -3.0, "1": -1.0}
+
+
+def test_evaluate_prob_correct_is_none_when_all_logprobs_are_none():
+    stimulus = Stimulus(query="AABB ", expected="1", answer_choices=["0", "1"])
+    backend = StubBackend(logprob=None, logprobs_by_completion={})
+    results = evaluate(StubTask(), backend, n_examples=0, stimuli=[stimulus])
+    assert results[0].score.prob_correct is None
+
+
+def test_evaluate_answer_logprobs_is_none_without_answer_choices():
+    stimulus = Stimulus(query="de ro", expected="ro")
+    results = evaluate(StubTask(), StubBackend(text="ro"), n_examples=0, stimuli=[stimulus])
+    assert results[0].score.answer_logprobs is None
+
+
 def test_save_results_path_structure(tmp_path):
     run_id = "2026-03-25T17-35-08"
     results = evaluate(StubTask(), StubBackend(), n_examples=0)

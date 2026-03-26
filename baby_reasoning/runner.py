@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import math
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -45,11 +46,27 @@ def evaluate(
                 for c in stimulus.answer_choices
             }
             logprob_correct = logprobs.get(stimulus.expected)
+            valid = {c: lp for c, lp in logprobs.items() if lp is not None}
+            if valid:
+                max_lp = max(valid.values())
+                denom = sum(math.exp(lp - max_lp) for lp in valid.values())
+                lp_c = valid.get(stimulus.expected)
+                prob_correct = math.exp(lp_c - max_lp) / denom if lp_c is not None else None
+            else:
+                prob_correct = None
+            answer_logprobs = logprobs
         else:
             logprob_correct = backend.score_completion(
                 prompt, task.format_completion(stimulus, stimulus.expected)
             )
-        score = TrialScore(correct=correct, logprob_correct=logprob_correct)
+            prob_correct = None
+            answer_logprobs = None
+        score = TrialScore(
+            correct=correct,
+            logprob_correct=logprob_correct,
+            prob_correct=prob_correct,
+            answer_logprobs=answer_logprobs,
+        )
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
         results.append(
             TrialResult(

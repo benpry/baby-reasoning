@@ -13,7 +13,7 @@ from baby_reasoning.cli import Config, TASK_MAP, run
 # ---------------------------------------------------------------------------
 
 def test_task_map_has_all_tasks():
-    assert set(TASK_MAP) == {"rules", "hierarchical", "matrix"}
+    assert set(TASK_MAP) == {"rules", "hierarchical", "matrix", "matrix_easy"}
 
 
 def test_task_map_instantiates():

@@ -8,15 +8,17 @@ from baby_reasoning.model import VLLMBackend
 from baby_reasoning.runner import evaluate, save_results
 from baby_reasoning.tasks.hierarchical import HierarchicalTask
 from baby_reasoning.tasks.matrix import MatrixTask
+from baby_reasoning.tasks.matrix_easy import MatrixEasyTask
 from baby_reasoning.tasks.rules import RulesTask
 
 TASK_MAP = {
     "rules": RulesTask,
     "hierarchical": HierarchicalTask,
     "matrix": MatrixTask,
+    "matrix_easy": MatrixEasyTask,
 }
 
-TaskName = Literal["rules", "hierarchical", "matrix"]
+TaskName = Literal["rules", "hierarchical", "matrix", "matrix_easy"]
 
 
 @dataclass

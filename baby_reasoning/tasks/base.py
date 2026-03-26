@@ -24,6 +24,8 @@ class ModelResponse:
 class TrialScore:
     correct: bool
     logprob_correct: float | None
+    prob_correct: float | None = None
+    answer_logprobs: dict[str, float | None] | None = None
 
 
 @dataclass
